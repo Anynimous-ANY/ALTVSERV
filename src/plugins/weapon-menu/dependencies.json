@@ -1,0 +1,8 @@
+{
+    "name": "weapon-menu",
+    "version": "1.0.0",
+    "description": "Comprehensive weapon menu with favorites and search",
+    "main": "server/index.ts",
+    "webview": "webview/WeaponMenu.vue",
+    "dependencies": []
+}

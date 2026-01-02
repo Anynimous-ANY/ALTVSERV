@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useEvents } from '../../../../webview/composables/useEvents';
 import { WEAPONS, type Weapon } from '../shared/weapons';
 import { WeaponMenuEvents } from '../shared/events';
@@ -7,9 +7,24 @@ import { WeaponMenuEvents } from '../shared/events';
 const events = useEvents();
 
 const searchQuery = ref('');
+const debouncedSearchQuery = ref('');
 const currentTab = ref<'all' | 'favorites'>('all');
 const favorites = ref<string[]>([]);
 const selectedWeapon = ref<Weapon | null>(null);
+const isLoading = ref(true);
+const error = ref<string | null>(null);
+
+let searchDebounceTimer: number | null = null;
+
+// Debounce search query
+watch(searchQuery, (newValue) => {
+    if (searchDebounceTimer) {
+        clearTimeout(searchDebounceTimer);
+    }
+    searchDebounceTimer = window.setTimeout(() => {
+        debouncedSearchQuery.value = newValue;
+    }, 300);
+});
 
 // Filter weapons based on search query
 const filteredWeapons = computed(() => {
@@ -21,8 +36,8 @@ const filteredWeapons = computed(() => {
     }
 
     // Filter by search query
-    if (searchQuery.value.trim() !== '') {
-        const query = searchQuery.value.toLowerCase();
+    if (debouncedSearchQuery.value.trim() !== '') {
+        const query = debouncedSearchQuery.value.toLowerCase().trim();
         weapons = weapons.filter(
             (w) =>
                 w.name.toLowerCase().includes(query) ||
@@ -49,41 +64,141 @@ const groupedWeapons = computed(() => {
 });
 
 function selectWeapon(weapon: Weapon) {
-    selectedWeapon.value = weapon;
-    events.emitServer(WeaponMenuEvents.toServer.giveWeapon, weapon.hash);
+    if (!weapon || !weapon.hash) {
+        error.value = 'Invalid weapon selected';
+        return;
+    }
+
+    try {
+        selectedWeapon.value = weapon;
+        events.emitServer(WeaponMenuEvents.toServer.giveWeapon, weapon.hash);
+    } catch (err) {
+        console.error('Error selecting weapon:', err);
+        error.value = 'Failed to select weapon';
+    }
 }
 
 function toggleFavorite(weapon: Weapon, event: Event) {
     event.stopPropagation();
-    events.emitServer(WeaponMenuEvents.toServer.toggleFavorite, weapon.hash);
+
+    if (!weapon || !weapon.hash) {
+        error.value = 'Invalid weapon';
+        return;
+    }
+
+    try {
+        events.emitServer(WeaponMenuEvents.toServer.toggleFavorite, weapon.hash);
+    } catch (err) {
+        console.error('Error toggling favorite:', err);
+        error.value = 'Failed to toggle favorite';
+    }
 }
 
 function isFavorite(weapon: Weapon): boolean {
+    if (!weapon || !weapon.hash) {
+        return false;
+    }
     return favorites.value.includes(weapon.hash);
 }
 
-function setFavorites(favs: string[]) {
-    favorites.value = favs;
+function setFavorites(favs: string[] | null) {
+    try {
+        if (!favs || !Array.isArray(favs)) {
+            favorites.value = [];
+            return;
+        }
+        favorites.value = favs;
+        isLoading.value = false;
+    } catch (err) {
+        console.error('Error setting favorites:', err);
+        error.value = 'Failed to load favorites';
+        favorites.value = [];
+        isLoading.value = false;
+    }
 }
 
 function closeMenu() {
-    events.emitClient('rebar:hideWebview', 'WeaponMenu');
+    try {
+        // Reset state
+        selectedWeapon.value = null;
+        searchQuery.value = '';
+        debouncedSearchQuery.value = '';
+        error.value = null;
+
+        // Close the page
+        events.emitClient('rebar:closePage', 'WeaponMenu');
+    } catch (err) {
+        console.error('Error closing menu:', err);
+    }
+}
+
+function handleOpen() {
+    try {
+        isLoading.value = true;
+        error.value = null;
+        events.emitServer(WeaponMenuEvents.toServer.getFavorites);
+    } catch (err) {
+        console.error('Error opening menu:', err);
+        error.value = 'Failed to open menu';
+        isLoading.value = false;
+    }
+}
+
+function handleClose() {
+    selectedWeapon.value = null;
+    searchQuery.value = '';
+    debouncedSearchQuery.value = '';
+    error.value = null;
 }
 
 onMounted(() => {
-    events.on(WeaponMenuEvents.toWebview.setFavorites, setFavorites);
-    events.emitServer(WeaponMenuEvents.toServer.getFavorites);
+    try {
+        if (!events) {
+            console.error('Events composable not available');
+            return;
+        }
+
+        events.on(WeaponMenuEvents.toWebview.setFavorites, setFavorites);
+        events.on(WeaponMenuEvents.toWebview.open, handleOpen);
+        events.on(WeaponMenuEvents.toWebview.close, handleClose);
+        events.emitServer(WeaponMenuEvents.toServer.getFavorites);
+    } catch (err) {
+        console.error('Error in onMounted:', err);
+        error.value = 'Failed to initialize menu';
+    }
+});
+
+onUnmounted(() => {
+    try {
+        if (searchDebounceTimer) {
+            clearTimeout(searchDebounceTimer);
+        }
+
+        // Clean up event listeners
+        if (events) {
+            events.off(WeaponMenuEvents.toWebview.setFavorites, setFavorites);
+            events.off(WeaponMenuEvents.toWebview.open, handleOpen);
+            events.off(WeaponMenuEvents.toWebview.close, handleClose);
+        }
+    } catch (err) {
+        console.error('Error in onUnmounted:', err);
+    }
 });
 </script>
 
 <template>
-    <div class="fixed left-8 top-1/2 flex h-[600px] w-[400px] -translate-y-1/2 flex-col overflow-hidden rounded-2xl border-2 border-gray-700 bg-gray-900 bg-opacity-95 shadow-2xl">
+    <div class="fixed left-8 top-1/2 flex h-[600px] w-[400px] -translate-y-1/2 flex-col overflow-hidden rounded-2xl border-2 border-gray-700 bg-gray-900 bg-opacity-95 shadow-2xl" role="dialog" aria-labelledby="weapon-menu-title" aria-modal="true">
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-gray-700 bg-gray-800 px-4 py-3">
-            <h2 class="text-xl font-bold text-white">Weapon Menu</h2>
-            <button @click="closeMenu" class="rounded-lg bg-red-600 px-3 py-1 text-sm font-semibold text-white transition hover:bg-red-700">
+            <h2 id="weapon-menu-title" class="text-xl font-bold text-white">Weapon Menu</h2>
+            <button @click="closeMenu" class="rounded-lg bg-red-600 px-3 py-1 text-sm font-semibold text-white transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" aria-label="Close weapon menu">
                 Close
             </button>
+        </div>
+
+        <!-- Error Message -->
+        <div v-if="error" class="border-b border-red-700 bg-red-900 bg-opacity-80 px-4 py-2 text-center text-sm text-white">
+            {{ error }}
         </div>
 
         <!-- Search Bar -->
@@ -92,40 +207,56 @@ onMounted(() => {
                 v-model="searchQuery"
                 type="text"
                 placeholder="Search weapons..."
-                class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-white placeholder-gray-400 outline-none focus:border-blue-500"
+                class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-white placeholder-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                aria-label="Search weapons"
             />
         </div>
 
         <!-- Tabs -->
-        <div class="flex border-b border-gray-700 bg-gray-800">
+        <div class="flex border-b border-gray-700 bg-gray-800" role="tablist">
             <button
                 @click="currentTab = 'all'"
-                class="flex-1 px-4 py-3 font-semibold transition"
+                class="flex-1 px-4 py-3 font-semibold transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                 :class="currentTab === 'all' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white'"
+                role="tab"
+                :aria-selected="currentTab === 'all'"
+                aria-controls="all-weapons-panel"
             >
                 All Weapons
             </button>
             <button
                 @click="currentTab = 'favorites'"
-                class="flex-1 px-4 py-3 font-semibold transition"
+                class="flex-1 px-4 py-3 font-semibold transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                 :class="currentTab === 'favorites' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white'"
+                role="tab"
+                :aria-selected="currentTab === 'favorites'"
+                aria-controls="favorites-panel"
             >
                 ⭐ Favorites
             </button>
         </div>
 
+        <!-- Loading State -->
+        <div v-if="isLoading" class="flex flex-1 items-center justify-center">
+            <p class="text-gray-400">Loading weapons...</p>
+        </div>
+
         <!-- Weapon List -->
-        <div class="flex-1 overflow-y-auto p-4">
+        <div v-else class="flex-1 overflow-y-auto p-4" role="tabpanel" :id="currentTab === 'all' ? 'all-weapons-panel' : 'favorites-panel'">
             <template v-if="Object.keys(groupedWeapons).length > 0">
                 <div v-for="(weapons, category) in groupedWeapons" :key="category" class="mb-4">
                     <h3 class="mb-2 text-sm font-bold uppercase tracking-wide text-gray-400">{{ category }}</h3>
-                    <div class="space-y-2">
+                    <div class="space-y-2" role="list">
                         <div
                             v-for="weapon in weapons"
                             :key="weapon.hash"
                             @click="selectWeapon(weapon)"
-                            class="flex cursor-pointer items-center justify-between rounded-lg bg-gray-800 px-4 py-3 transition hover:bg-gray-700"
+                            class="flex cursor-pointer items-center justify-between rounded-lg bg-gray-800 px-4 py-3 transition hover:bg-gray-700 focus-within:ring-2 focus-within:ring-blue-500"
                             :class="selectedWeapon?.hash === weapon.hash ? 'ring-2 ring-blue-500' : ''"
+                            role="listitem"
+                            tabindex="0"
+                            @keydown.enter="selectWeapon(weapon)"
+                            @keydown.space.prevent="selectWeapon(weapon)"
                         >
                             <div class="flex-1">
                                 <p class="font-semibold text-white">{{ weapon.name }}</p>
@@ -133,8 +264,10 @@ onMounted(() => {
                             </div>
                             <button
                                 @click="toggleFavorite(weapon, $event)"
-                                class="ml-2 text-2xl transition"
+                                class="ml-2 text-2xl transition focus:outline-none focus:ring-2 focus:ring-yellow-500"
                                 :class="isFavorite(weapon) ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'"
+                                :aria-label="isFavorite(weapon) ? 'Remove from favorites' : 'Add to favorites'"
+                                tabindex="0"
                             >
                                 {{ isFavorite(weapon) ? '⭐' : '☆' }}
                             </button>
