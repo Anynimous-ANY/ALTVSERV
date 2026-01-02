@@ -157,3 +157,202 @@ alt.onClient(WeaponMenuEvents.toServer.getFavorites, (player: alt.Player) => {
         console.error('Error getting favorites:', error);
     }
 });
+
+// Handle get current weapons request
+alt.onClient(WeaponMenuEvents.toServer.getCurrentWeapons, (player: alt.Player) => {
+    if (!player || !player.valid) {
+        return;
+    }
+
+    try {
+        const weapon = Rebar.player.useWeapon(player);
+        const currentWeapons = weapon.getWeapons();
+
+        const webview = Rebar.player.useWebview(player);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, currentWeapons);
+    } catch (error) {
+        console.error('Error getting current weapons:', error);
+    }
+});
+
+// Handle remove weapon request
+alt.onClient(WeaponMenuEvents.toServer.removeWeapon, async (player: alt.Player, weaponHash: number) => {
+    if (!player || !player.valid) {
+        return;
+    }
+
+    try {
+        if (!weaponHash || typeof weaponHash !== 'number') {
+            return;
+        }
+
+        const rPlayer = Rebar.usePlayer(player);
+        const character = rPlayer.character.get();
+
+        if (!character) {
+            return;
+        }
+
+        const weapon = Rebar.player.useWeapon(player);
+        await weapon.clearWeapon(weaponHash);
+
+        rPlayer.notify.showNotification('Weapon removed');
+
+        // Send updated weapons list
+        const currentWeapons = weapon.getWeapons();
+        const webview = Rebar.player.useWebview(player);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, currentWeapons);
+    } catch (error) {
+        console.error('Error removing weapon:', error);
+    }
+});
+
+// Handle set weapon tint request
+alt.onClient(WeaponMenuEvents.toServer.setWeaponTint, async (player: alt.Player, weaponHash: number, tintIndex: number) => {
+    if (!player || !player.valid) {
+        return;
+    }
+
+    try {
+        if (!weaponHash || typeof weaponHash !== 'number' || typeof tintIndex !== 'number') {
+            return;
+        }
+
+        const rPlayer = Rebar.usePlayer(player);
+        const character = rPlayer.character.get();
+
+        if (!character) {
+            return;
+        }
+
+        const document = Rebar.document.character.useCharacter(player);
+        const weapons = document.getField('weapons') ?? [];
+
+        const weaponIndex = weapons.findIndex((w) => w.hash === weaponHash);
+        if (weaponIndex === -1) {
+            return;
+        }
+
+        weapons[weaponIndex].tintIndex = tintIndex;
+        player.setWeaponTintIndex(weaponHash, tintIndex);
+
+        await document.set('weapons', weapons);
+
+        rPlayer.notify.showNotification('Weapon tint changed');
+
+        // Send updated weapons list
+        const weapon = Rebar.player.useWeapon(player);
+        const currentWeapons = weapon.getWeapons();
+        const webview = Rebar.player.useWebview(player);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, currentWeapons);
+    } catch (error) {
+        console.error('Error setting weapon tint:', error);
+    }
+});
+
+// Handle set weapon ammo request
+alt.onClient(WeaponMenuEvents.toServer.setWeaponAmmo, async (player: alt.Player, weaponHash: number, ammo: number) => {
+    if (!player || !player.valid) {
+        return;
+    }
+
+    try {
+        if (!weaponHash || typeof weaponHash !== 'number' || typeof ammo !== 'number') {
+            return;
+        }
+
+        const rPlayer = Rebar.usePlayer(player);
+        const character = rPlayer.character.get();
+
+        if (!character) {
+            return;
+        }
+
+        const document = Rebar.document.character.useCharacter(player);
+        const weapons = document.getField('weapons') ?? [];
+
+        const weaponIndex = weapons.findIndex((w) => w.hash === weaponHash);
+        if (weaponIndex === -1) {
+            return;
+        }
+
+        weapons[weaponIndex].ammo = Math.max(0, ammo);
+        player.setWeaponAmmo(weaponHash, weapons[weaponIndex].ammo);
+
+        await document.set('weapons', weapons);
+
+        rPlayer.notify.showNotification(`Weapon ammo set to ${weapons[weaponIndex].ammo}`);
+
+        // Send updated weapons list
+        const weapon = Rebar.player.useWeapon(player);
+        const currentWeapons = weapon.getWeapons();
+        const webview = Rebar.player.useWebview(player);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, currentWeapons);
+    } catch (error) {
+        console.error('Error setting weapon ammo:', error);
+    }
+});
+
+// Handle add weapon component request
+alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Player, weaponHash: number, component: number) => {
+    if (!player || !player.valid) {
+        return;
+    }
+
+    try {
+        if (!weaponHash || typeof weaponHash !== 'number' || typeof component !== 'number') {
+            return;
+        }
+
+        const rPlayer = Rebar.usePlayer(player);
+        const character = rPlayer.character.get();
+
+        if (!character) {
+            return;
+        }
+
+        const weapon = Rebar.player.useWeapon(player);
+        await weapon.addWeaponComponent(weaponHash, component);
+
+        rPlayer.notify.showNotification('Component added');
+
+        // Send updated weapons list
+        const currentWeapons = weapon.getWeapons();
+        const webview = Rebar.player.useWebview(player);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, currentWeapons);
+    } catch (error) {
+        console.error('Error adding weapon component:', error);
+    }
+});
+
+// Handle remove weapon component request
+alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt.Player, weaponHash: number, component: number) => {
+    if (!player || !player.valid) {
+        return;
+    }
+
+    try {
+        if (!weaponHash || typeof weaponHash !== 'number' || typeof component !== 'number') {
+            return;
+        }
+
+        const rPlayer = Rebar.usePlayer(player);
+        const character = rPlayer.character.get();
+
+        if (!character) {
+            return;
+        }
+
+        const weapon = Rebar.player.useWeapon(player);
+        await weapon.removeWeaponComponent(weaponHash, component);
+
+        rPlayer.notify.showNotification('Component removed');
+
+        // Send updated weapons list
+        const currentWeapons = weapon.getWeapons();
+        const webview = Rebar.player.useWebview(player);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, currentWeapons);
+    } catch (error) {
+        console.error('Error removing weapon component:', error);
+    }
+});
