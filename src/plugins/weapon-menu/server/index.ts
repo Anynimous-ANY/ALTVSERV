@@ -367,13 +367,13 @@ alt.onClient(WeaponMenuEvents.toServer.setWeaponAmmo, async (player: alt.Player,
 });
 
 // Handle add weapon component request
-alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Player, weaponHash: number, component: number) => {
+alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Player, weaponHash: number, componentHash: number) => {
     if (!player || !player.valid) {
         return;
     }
 
     try {
-        if (!weaponHash || typeof weaponHash !== 'number' || typeof component !== 'number') {
+        if (!weaponHash || typeof weaponHash !== 'number' || typeof componentHash !== 'number') {
             return;
         }
 
@@ -384,28 +384,53 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
             return;
         }
 
-        const weapon = Rebar.player.useWeapon(player);
-        await weapon.addWeaponComponent(weaponHash, component);
+        // Check if player has the weapon
+        if (!player.hasWeapon(weaponHash)) {
+            return;
+        }
+
+        // Add the component
+        player.addWeaponComponent(weaponHash, componentHash);
 
         rPlayer.notify.showNotification('Component added');
 
         // Send updated weapons list
-        const currentWeapons = weapon.getWeapons();
+        const allWeapons: any[] = [];
+        for (const weapon of player.weapons) {
+            // Find the weapon definition to get the name
+            let weaponName = `Weapon ${weapon.hash}`;
+            for (const weaponDef of WEAPONS) {
+                const wHash = alt.hash(weaponDef.hash);
+                if (wHash === weapon.hash) {
+                    weaponName = weaponDef.name;
+                    break;
+                }
+            }
+
+            allWeapons.push({
+                hash: weapon.hash,
+                name: weaponName,
+                ammo: player.getWeaponAmmo(weapon.hash),
+                tintIndex: weapon.tintIndex,
+                components: weapon.components || [],
+            });
+        }
+
         const webview = Rebar.player.useWebview(player);
-        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, currentWeapons);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, allWeapons);
     } catch (error) {
         console.error('Error adding weapon component:', error);
     }
 });
 
 // Handle remove weapon component request
-alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt.Player, weaponHash: number, component: number) => {
+alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt.Player, weaponHash: number, componentHash: number) => {
     if (!player || !player.valid) {
         return;
     }
 
     try {
-        if (!weaponHash || typeof weaponHash !== 'number' || typeof component !== 'number') {
+        if (!weaponHash || typeof weaponHash !== 'number' || typeof componentHash !== 'number') {
             return;
         }
 
@@ -416,15 +441,40 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
             return;
         }
 
-        const weapon = Rebar.player.useWeapon(player);
-        await weapon.removeWeaponComponent(weaponHash, component);
+        // Check if player has the weapon
+        if (!player.hasWeapon(weaponHash)) {
+            return;
+        }
+
+        // Remove the component
+        player.removeWeaponComponent(weaponHash, componentHash);
 
         rPlayer.notify.showNotification('Component removed');
 
         // Send updated weapons list
-        const currentWeapons = weapon.getWeapons();
+        const allWeapons: any[] = [];
+        for (const weapon of player.weapons) {
+            // Find the weapon definition to get the name
+            let weaponName = `Weapon ${weapon.hash}`;
+            for (const weaponDef of WEAPONS) {
+                const wHash = alt.hash(weaponDef.hash);
+                if (wHash === weapon.hash) {
+                    weaponName = weaponDef.name;
+                    break;
+                }
+            }
+
+            allWeapons.push({
+                hash: weapon.hash,
+                name: weaponName,
+                ammo: player.getWeaponAmmo(weapon.hash),
+                tintIndex: weapon.tintIndex,
+                components: weapon.components || [],
+            });
+        }
+
         const webview = Rebar.player.useWebview(player);
-        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, currentWeapons);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, allWeapons);
     } catch (error) {
         console.error('Error removing weapon component:', error);
     }

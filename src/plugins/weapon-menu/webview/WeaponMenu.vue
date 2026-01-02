@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useEvents } from '../../../../webview/composables/useEvents';
 import { WEAPONS, type Weapon } from '../shared/weapons';
 import { WeaponMenuEvents } from '../shared/events';
+import { WEAPON_COMPONENTS, WEAPON_TINTS } from '../shared/weaponComponents';
 
 const events = useEvents();
 
@@ -245,8 +246,53 @@ function changeAmmo(weaponHash: number, ammo: number) {
     }
 }
 
+function addComponent(weaponHash: number, componentHash: number) {
+    try {
+        events.emitServer(WeaponMenuEvents.toServer.addWeaponComponent, weaponHash, componentHash);
+        // Refresh weapons list to show updated components
+        setTimeout(() => loadCurrentWeapons(), 500);
+    } catch (err) {
+        console.error('Error adding component:', err);
+    }
+}
+
+function removeComponent(weaponHash: number, componentHash: number) {
+    try {
+        events.emitServer(WeaponMenuEvents.toServer.removeWeaponComponent, weaponHash, componentHash);
+        // Refresh weapons list to show updated components
+        setTimeout(() => loadCurrentWeapons(), 500);
+    } catch (err) {
+        console.error('Error removing component:', err);
+    }
+}
+
 function selectModifyWeapon(weapon: any) {
     selectedModifyWeapon.value = weapon;
+}
+
+// Get available components for a weapon
+const availableComponents = computed(() => {
+    if (!selectedModifyWeapon.value) return [];
+    
+    const weaponDef = WEAPONS.find(w => {
+        const hash = typeof w.hash === 'string' ? w.hash : `weapon_${w.name.toLowerCase().replace(/\s+/g, '')}`;
+        return hash === selectedModifyWeapon.value.name?.toLowerCase().replace(/\s+/g, '_') || 
+               w.name === selectedModifyWeapon.value.name;
+    });
+    
+    if (!weaponDef) return [];
+    
+    const weaponHashStr = typeof weaponDef.hash === 'string' ? weaponDef.hash : `weapon_${weaponDef.name.toLowerCase().replace(/\s+/g, '')}`;
+    
+    return WEAPON_COMPONENTS.filter(comp => 
+        comp.weaponHashes.includes(weaponHashStr)
+    );
+});
+
+// Check if a component is currently attached
+function isComponentAttached(componentHash: number): boolean {
+    if (!selectedModifyWeapon.value || !selectedModifyWeapon.value.components) return false;
+    return selectedModifyWeapon.value.components.includes(componentHash);
 }
 
 onMounted(() => {
@@ -424,14 +470,9 @@ onUnmounted(() => {
                             @change="changeTint(selectedModifyWeapon.hash, parseInt(($event.target as HTMLSelectElement).value))"
                             class="w-full rounded bg-gray-700 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                            <option :value="0">Default</option>
-                            <option :value="1">Green</option>
-                            <option :value="2">Gold</option>
-                            <option :value="3">Pink</option>
-                            <option :value="4">Army</option>
-                            <option :value="5">LSPD</option>
-                            <option :value="6">Orange</option>
-                            <option :value="7">Platinum</option>
+                            <option v-for="tint in WEAPON_TINTS" :key="tint.id" :value="tint.id">
+                                {{ tint.name }}
+                            </option>
                         </select>
                     </div>
 
@@ -448,10 +489,51 @@ onUnmounted(() => {
                         />
                     </div>
 
-                    <!-- Components Info -->
+                    <!-- Components Management -->
                     <div class="mb-4">
-                        <label class="mb-2 block text-xs font-semibold text-gray-400">Components</label>
-                        <p class="text-xs text-gray-400">{{ selectedModifyWeapon.components.length }} attached</p>
+                        <label class="mb-2 block text-xs font-semibold text-gray-400">Weapon Components</label>
+                        
+                        <!-- Currently Attached Components -->
+                        <div v-if="selectedModifyWeapon.components.length > 0" class="mb-3">
+                            <p class="mb-2 text-xs text-gray-500">Attached ({{ selectedModifyWeapon.components.length }}):</p>
+                            <div class="space-y-1">
+                                <div 
+                                    v-for="comp in WEAPON_COMPONENTS.filter(c => isComponentAttached(c.hash))" 
+                                    :key="comp.hash"
+                                    class="flex items-center justify-between rounded bg-gray-600 px-2 py-1"
+                                >
+                                    <span class="text-xs text-white">{{ comp.name }}</span>
+                                    <button
+                                        @click="removeComponent(selectedModifyWeapon.hash, comp.hash)"
+                                        class="rounded bg-red-600 px-2 py-0.5 text-xs text-white hover:bg-red-700"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <p v-else class="mb-3 text-xs text-gray-500">No components attached</p>
+                        
+                        <!-- Available Components to Add -->
+                        <div v-if="availableComponents.length > 0">
+                            <p class="mb-2 text-xs text-gray-500">Available to add:</p>
+                            <div class="max-h-32 space-y-1 overflow-y-auto">
+                                <div 
+                                    v-for="comp in availableComponents.filter(c => !isComponentAttached(c.hash))" 
+                                    :key="comp.hash"
+                                    class="flex items-center justify-between rounded bg-gray-600 px-2 py-1"
+                                >
+                                    <span class="text-xs text-white">{{ comp.name }}</span>
+                                    <button
+                                        @click="addComponent(selectedModifyWeapon.hash, comp.hash)"
+                                        class="rounded bg-green-600 px-2 py-0.5 text-xs text-white hover:bg-green-700"
+                                    >
+                                        Add
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <p v-else class="text-xs text-gray-500">No components available for this weapon</p>
                     </div>
 
                     <!-- Remove Weapon Button -->
