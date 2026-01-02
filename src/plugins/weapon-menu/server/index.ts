@@ -408,11 +408,14 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
         // Remove the weapon temporarily
         player.removeWeapon(weaponHash);
 
-        // Give the weapon back with all components including the new one
-        player.giveWeapon(weaponHash, currentAmmo, true);
+        // Give the weapon back with ammo
+        player.giveWeapon(weaponHash, currentAmmo, false);
         
-        // Set this as current weapon to ensure components apply properly
+        // Set this as current weapon FIRST to ensure components apply properly
         player.currentWeapon = weaponHash;
+        
+        // Small delay to ensure weapon is fully equipped
+        await new Promise(resolve => setTimeout(resolve, 50));
         
         // Re-apply tint
         player.setWeaponTintIndex(weaponHash, currentTint);
@@ -513,10 +516,13 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
         player.removeWeapon(weaponHash);
 
         // Give the weapon back with remaining components
-        player.giveWeapon(weaponHash, currentAmmo, true);
+        player.giveWeapon(weaponHash, currentAmmo, false);
         
-        // Set this as current weapon to ensure components apply properly
+        // Set this as current weapon FIRST to ensure components apply properly
         player.currentWeapon = weaponHash;
+        
+        // Small delay to ensure weapon is fully equipped
+        await new Promise(resolve => setTimeout(resolve, 50));
         
         // Re-apply tint
         player.setWeaponTintIndex(weaponHash, currentTint);

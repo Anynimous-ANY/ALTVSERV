@@ -32,7 +32,7 @@ export const WEAPON_COMPONENTS: WeaponComponent[] = [
     { name: 'Extended Clip', hash: 0x57103969, weaponHashes: ['weapon_marksmanrifle'] },
     
     // Grips
-    { name: 'Grip', hash: 0xC164F53, weaponHashes: ['weapon_combatpistol', 'weapon_appistol', 'weapon_pistol50', 'weapon_heavypistol'] },
+    { name: 'Grip', hash: 0x0C164F53, weaponHashes: ['weapon_combatpistol', 'weapon_appistol', 'weapon_pistol50', 'weapon_heavypistol'] },
     { name: 'Grip', hash: 0x9D2FBF29, weaponHashes: ['weapon_assaultsmg', 'weapon_combatpdw'] },
     { name: 'Grip', hash: 0xC78C77DD, weaponHashes: ['weapon_assaultrifle', 'weapon_carbinerifle', 'weapon_advancedrifle', 'weapon_specialcarbine', 'weapon_bullpuprifle'] },
     { name: 'Grip', hash: 0xC6654D72, weaponHashes: ['weapon_mg', 'weapon_combatmg'] },
