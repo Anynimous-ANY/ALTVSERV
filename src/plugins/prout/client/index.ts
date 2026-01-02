@@ -19,19 +19,22 @@ function startFlyMode() {
     }
 
     const player = alt.Player.local;
+    const ped = player.scriptID;
+    
+    // Enable fly mode settings
+    native.setEntityInvincible(ped, true);
+    native.setEntityCollision(ped, false, false);
     
     interval = alt.setInterval(() => {
         if (!isFlyEnabled) {
             return;
         }
 
-        const ped = player.scriptID;
         const pos = player.pos;
         const rot = native.getGameplayCamRot(2);
 
-        // Disable gravity
-        native.setEntityInvincible(ped, true);
-        native.freezeEntityPosition(ped, true);
+        // Prevent falling
+        native.setEntityVelocity(ped, 0, 0, 0);
 
         // Calculate movement direction
         let velocity = new alt.Vector3(0, 0, 0);
@@ -80,15 +83,16 @@ function startFlyMode() {
             flySpeed = Math.max(flySpeed - 0.1, minFlySpeed);
         }
 
-        // Apply velocity
-        const newPos = new alt.Vector3(
-            pos.x + velocity.x,
-            pos.y + velocity.y,
-            pos.z + velocity.z
-        );
+        // Apply movement
+        if (velocity.x !== 0 || velocity.y !== 0 || velocity.z !== 0) {
+            const newPos = new alt.Vector3(
+                pos.x + velocity.x,
+                pos.y + velocity.y,
+                pos.z + velocity.z
+            );
 
-        native.setEntityCoordsNoOffset(ped, newPos.x, newPos.y, newPos.z, true, true, true);
-        native.setEntityVelocity(ped, 0, 0, 0);
+            native.setEntityCoordsNoOffset(ped, newPos.x, newPos.y, newPos.z, false, false, false);
+        }
     }, 0);
 }
 
@@ -103,9 +107,9 @@ function stopFlyMode() {
     const player = alt.Player.local;
     const ped = player.scriptID;
 
-    // Re-enable gravity and physics
+    // Re-enable normal physics
     native.setEntityInvincible(ped, false);
-    native.freezeEntityPosition(ped, false);
+    native.setEntityCollision(ped, true, true);
 }
 
 function toggleFly(enabled: boolean) {
