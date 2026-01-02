@@ -87,6 +87,22 @@ function toggleFavorite(weapon: Weapon, event: Event) {
     }
 
     try {
+        // Optimistically update the UI immediately
+        const index = favorites.value.indexOf(weapon.hash);
+        if (index > -1) {
+            // Remove from favorites
+            favorites.value.splice(index, 1);
+        } else {
+            // Check limit before adding
+            if (favorites.value.length >= 20) {
+                error.value = 'Maximum 20 favorite weapons allowed';
+                return;
+            }
+            // Add to favorites
+            favorites.value.push(weapon.hash);
+        }
+
+        // Also emit to server to save
         events.emitServer(WeaponMenuEvents.toServer.toggleFavorite, weapon.hash);
     } catch (err) {
         console.error('Error toggling favorite:', err);
