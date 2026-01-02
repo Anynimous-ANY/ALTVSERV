@@ -193,6 +193,14 @@ function loadCurrentWeapons() {
 function setCurrentWeapons(weapons: any[]) {
     try {
         currentWeapons.value = weapons || [];
+        
+        // Update selected weapon if it's still in the list
+        if (selectedModifyWeapon.value) {
+            const updatedWeapon = weapons.find(w => w.hash === selectedModifyWeapon.value?.hash);
+            if (updatedWeapon) {
+                selectedModifyWeapon.value = updatedWeapon;
+            }
+        }
     } catch (err) {
         console.error('Error setting current weapons:', err);
     }
@@ -249,8 +257,7 @@ function changeAmmo(weaponHash: number, ammo: number) {
 function addComponent(weaponHash: number, componentHash: number) {
     try {
         events.emitServer(WeaponMenuEvents.toServer.addWeaponComponent, weaponHash, componentHash);
-        // Refresh weapons list to show updated components
-        setTimeout(() => loadCurrentWeapons(), 500);
+        // Server will send updated weapons list via setCurrentWeapons event
     } catch (err) {
         console.error('Error adding component:', err);
     }
@@ -259,8 +266,7 @@ function addComponent(weaponHash: number, componentHash: number) {
 function removeComponent(weaponHash: number, componentHash: number) {
     try {
         events.emitServer(WeaponMenuEvents.toServer.removeWeaponComponent, weaponHash, componentHash);
-        // Refresh weapons list to show updated components
-        setTimeout(() => loadCurrentWeapons(), 500);
+        // Server will send updated weapons list via setCurrentWeapons event
     } catch (err) {
         console.error('Error removing component:', err);
     }
