@@ -229,22 +229,23 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeapon, async (player: alt.Player, 
 
         rPlayer.notify.showNotification('Weapon removed');
 
-        // Send updated weapons list
+        // Send updated weapons list using player.weapons array
         const allWeapons: any[] = [];
-        for (const weaponDef of WEAPONS) {
-            const wHash = alt.hash(weaponDef.hash);
-            if (player.hasWeapon(wHash)) {
-                const ammo = player.getWeaponAmmo(wHash);
-                const tintIndex = player.getWeaponTintIndex(wHash);
-                const components = player.getWeaponComponents(wHash);
+        if (player.weapons && Array.isArray(player.weapons)) {
+            for (const weapon of player.weapons) {
+                const weaponDef = WEAPONS.find(w => alt.hash(w.hash) === weapon.hash);
                 
-                allWeapons.push({
-                    hash: wHash,
-                    name: weaponDef.name,
-                    ammo: ammo,
-                    tintIndex: tintIndex,
-                    components: components || [],
-                });
+                if (weaponDef) {
+                    const ammo = player.getWeaponAmmo(weapon.hash);
+                    
+                    allWeapons.push({
+                        hash: weapon.hash,
+                        name: weaponDef.name,
+                        ammo: ammo,
+                        tintIndex: weapon.tintIndex,
+                        components: weapon.components || [],
+                    });
+                }
             }
         }
         
@@ -283,22 +284,23 @@ alt.onClient(WeaponMenuEvents.toServer.setWeaponTint, async (player: alt.Player,
 
         rPlayer.notify.showNotification('Weapon tint changed');
 
-        // Send updated weapons list
+        // Send updated weapons list using player.weapons array
         const allWeapons: any[] = [];
-        for (const weaponDef of WEAPONS) {
-            const wHash = alt.hash(weaponDef.hash);
-            if (player.hasWeapon(wHash)) {
-                const ammo = player.getWeaponAmmo(wHash);
-                const tintIdx = player.getWeaponTintIndex(wHash);
-                const components = player.getWeaponComponents(wHash);
+        if (player.weapons && Array.isArray(player.weapons)) {
+            for (const weapon of player.weapons) {
+                const weaponDef = WEAPONS.find(w => alt.hash(w.hash) === weapon.hash);
                 
-                allWeapons.push({
-                    hash: wHash,
-                    name: weaponDef.name,
-                    ammo: ammo,
-                    tintIndex: tintIdx,
-                    components: components || [],
-                });
+                if (weaponDef) {
+                    const ammo = player.getWeaponAmmo(weapon.hash);
+                    
+                    allWeapons.push({
+                        hash: weapon.hash,
+                        name: weaponDef.name,
+                        ammo: ammo,
+                        tintIndex: weapon.tintIndex,
+                        components: weapon.components || [],
+                    });
+                }
             }
         }
         
@@ -340,22 +342,23 @@ alt.onClient(WeaponMenuEvents.toServer.setWeaponAmmo, async (player: alt.Player,
 
         rPlayer.notify.showNotification(`Weapon ammo set to ${clampedAmmo}`);
 
-        // Send updated weapons list
+        // Send updated weapons list using player.weapons array
         const allWeapons: any[] = [];
-        for (const weaponDef of WEAPONS) {
-            const wHash = alt.hash(weaponDef.hash);
-            if (player.hasWeapon(wHash)) {
-                const weaponAmmo = player.getWeaponAmmo(wHash);
-                const tintIndex = player.getWeaponTintIndex(wHash);
-                const components = player.getWeaponComponents(wHash);
+        if (player.weapons && Array.isArray(player.weapons)) {
+            for (const weapon of player.weapons) {
+                const weaponDef = WEAPONS.find(w => alt.hash(w.hash) === weapon.hash);
                 
-                allWeapons.push({
-                    hash: wHash,
-                    name: weaponDef.name,
-                    ammo: weaponAmmo,
-                    tintIndex: tintIndex,
-                    components: components || [],
-                });
+                if (weaponDef) {
+                    const weaponAmmo = player.getWeaponAmmo(weapon.hash);
+                    
+                    allWeapons.push({
+                        hash: weapon.hash,
+                        name: weaponDef.name,
+                        ammo: weaponAmmo,
+                        tintIndex: weapon.tintIndex,
+                        components: weapon.components || [],
+                    });
+                }
             }
         }
         
