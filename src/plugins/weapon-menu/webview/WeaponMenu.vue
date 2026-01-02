@@ -190,14 +190,22 @@ function setCurrentWeapons(weapons: any[]) {
     }
 }
 
-function getWeaponName(hash: number): string {
-    const weapon = WEAPONS.find((w) => w.hash === `weapon_${hash.toString(16)}`);
-    return weapon ? weapon.name : `Weapon ${hash}`;
+function getWeaponName(weaponOrHash: any): string {
+    // If it's an object with a name property, use that (server provides this now)
+    if (typeof weaponOrHash === 'object' && weaponOrHash.name) {
+        return weaponOrHash.name;
+    }
+    
+    // Fallback for numeric hash
+    const hash = typeof weaponOrHash === 'number' ? weaponOrHash : weaponOrHash.hash;
+    return `Weapon ${hash}`;
 }
 
 function removeWeapon(weaponHash: number) {
     try {
         events.emitServer(WeaponMenuEvents.toServer.removeWeapon, weaponHash);
+        // Reset selected weapon after removal
+        selectedModifyWeapon.value = null;
     } catch (err) {
         console.error('Error removing weapon:', err);
     }
@@ -206,6 +214,8 @@ function removeWeapon(weaponHash: number) {
 function changeTint(weaponHash: number, tintIndex: number) {
     try {
         events.emitServer(WeaponMenuEvents.toServer.setWeaponTint, weaponHash, tintIndex);
+        // Refresh weapons list to show updated tint
+        setTimeout(() => loadCurrentWeapons(), 500);
     } catch (err) {
         console.error('Error changing tint:', err);
     }
@@ -215,6 +225,14 @@ function changeAmmo(weaponHash: number, ammo: number) {
     try {
         const ammoValue = Math.max(0, parseInt(String(ammo)) || 0);
         events.emitServer(WeaponMenuEvents.toServer.setWeaponAmmo, weaponHash, ammoValue);
+        // Update local state immediately for better UX
+        if (selectedModifyWeapon.value && selectedModifyWeapon.value.hash === weaponHash) {
+            selectedModifyWeapon.value.ammo = ammoValue;
+        }
+        const weaponIndex = currentWeapons.value.findIndex(w => w.hash === weaponHash);
+        if (weaponIndex !== -1) {
+            currentWeapons.value[weaponIndex].ammo = ammoValue;
+        }
     } catch (err) {
         console.error('Error changing ammo:', err);
     }
@@ -377,7 +395,7 @@ onUnmounted(() => {
                         class="cursor-pointer rounded-lg bg-gray-800 px-3 py-2 transition hover:bg-gray-700"
                         :class="selectedModifyWeapon?.hash === weapon.hash ? 'ring-2 ring-blue-500' : ''"
                     >
-                        <p class="text-sm font-semibold text-white">{{ getWeaponName(weapon.hash) }}</p>
+                        <p class="text-sm font-semibold text-white">{{ weapon.name || getWeaponName(weapon) }}</p>
                         <p class="text-xs text-gray-400">Ammo: {{ weapon.ammo }}</p>
                     </div>
                 </div>
@@ -389,7 +407,7 @@ onUnmounted(() => {
             <!-- Modification Panel -->
             <div class="w-1/2 overflow-y-auto p-4">
                 <div v-if="selectedModifyWeapon">
-                    <h3 class="mb-3 text-sm font-bold text-white">{{ getWeaponName(selectedModifyWeapon.hash) }}</h3>
+                    <h3 class="mb-3 text-sm font-bold text-white">{{ selectedModifyWeapon.name || getWeaponName(selectedModifyWeapon) }}</h3>
                     
                     <!-- Tint Selection -->
                     <div class="mb-4">

@@ -168,8 +168,28 @@ alt.onClient(WeaponMenuEvents.toServer.getCurrentWeapons, (player: alt.Player) =
         const weapon = Rebar.player.useWeapon(player);
         const currentWeapons = weapon.getWeapons();
 
+        // Enhance weapons data with names from our WEAPONS list
+        const enhancedWeapons = currentWeapons.map((w: any) => {
+            // Find weapon name by converting hash back to string format
+            // weapon.hash is a number, we need to find matching WEAPONS entry
+            let weaponName = `Weapon ${w.hash}`;
+            
+            // Try to find weapon in WEAPONS by hashing each weapon's string hash
+            for (const weaponDef of WEAPONS) {
+                if (alt.hash(weaponDef.hash) === w.hash) {
+                    weaponName = weaponDef.name;
+                    break;
+                }
+            }
+            
+            return {
+                ...w,
+                name: weaponName,
+            };
+        });
+
         const webview = Rebar.player.useWebview(player);
-        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, currentWeapons);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, enhancedWeapons);
     } catch (error) {
         console.error('Error getting current weapons:', error);
     }
