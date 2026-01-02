@@ -169,33 +169,30 @@ alt.onClient(WeaponMenuEvents.toServer.getCurrentWeapons, (player: alt.Player) =
         const allWeapons: any[] = [];
         
         console.log('[WeaponMenu] Getting current weapons for player:', player.name);
-        console.log('[WeaponMenu] player.weapons type:', typeof player.weapons, 'value:', player.weapons);
+        console.log('[WeaponMenu] player.weapons:', player.weapons);
         
-        // Try to get weapons using getAllWeapons if available
-        if (typeof player.getAllWeapons === 'function') {
-            const weaponArray = player.getAllWeapons();
-            console.log('[WeaponMenu] getAllWeapons() returned:', weaponArray);
-        }
-        
-        // Iterate through all known weapons and check if player has them
-        for (const weaponDef of WEAPONS) {
-            const weaponHash = alt.hash(weaponDef.hash);
-            
-            // Check if player has this weapon
-            if (player.hasWeapon(weaponHash)) {
-                const ammo = player.getWeaponAmmo(weaponHash);
-                const tintIndex = player.getWeaponTintIndex(weaponHash);
-                const components = player.getWeaponComponents(weaponHash);
+        // player.weapons already contains all weapon data: { hash, tintIndex, components }
+        if (player.weapons && Array.isArray(player.weapons)) {
+            for (const weapon of player.weapons) {
+                // Find matching weapon definition
+                const weaponDef = WEAPONS.find(w => alt.hash(w.hash) === weapon.hash);
                 
-                console.log('[WeaponMenu] Player has weapon:', weaponDef.name, 'hash:', weaponHash, 'ammo:', ammo);
-                
-                allWeapons.push({
-                    hash: weaponHash,
-                    name: weaponDef.name,
-                    ammo: ammo,
-                    tintIndex: tintIndex,
-                    components: components || [],
-                });
+                if (weaponDef) {
+                    // Get ammo using the weapon hash
+                    const ammo = player.getWeaponAmmo(weapon.hash);
+                    
+                    console.log('[WeaponMenu] Found weapon:', weaponDef.name, 'tint:', weapon.tintIndex, 'ammo:', ammo);
+                    
+                    allWeapons.push({
+                        hash: weapon.hash,
+                        name: weaponDef.name,
+                        ammo: ammo,
+                        tintIndex: weapon.tintIndex,
+                        components: weapon.components || [],
+                    });
+                } else {
+                    console.log('[WeaponMenu] Unknown weapon hash:', weapon.hash);
+                }
             }
         }
 
