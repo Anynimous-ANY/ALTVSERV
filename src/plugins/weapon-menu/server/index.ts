@@ -168,16 +168,25 @@ alt.onClient(WeaponMenuEvents.toServer.getCurrentWeapons, (player: alt.Player) =
         // Get all weapons the player currently has
         const allWeapons: any[] = [];
         
-        // Iterate through all known weapons and check if player has them
-        for (const weaponDef of WEAPONS) {
-            const weaponHash = alt.hash(weaponDef.hash);
-            if (player.hasWeapon(weaponHash)) {
-                const ammo = player.getWeaponAmmo(weaponHash);
-                const tintIndex = player.getWeaponTintIndex(weaponHash);
-                const components = player.getWeaponComponents(weaponHash);
+        // Get all weapons from player (includes all weapon hashes they have)
+        const playerWeapons = player.weapons;
+        
+        console.log('[WeaponMenu] Player has', playerWeapons.length, 'weapons');
+        
+        // Iterate through player's weapons
+        for (const weapon of playerWeapons) {
+            // Find the weapon definition by matching the hash
+            const weaponDef = WEAPONS.find((w) => alt.hash(w.hash) === weapon.hash);
+            
+            if (weaponDef) {
+                const ammo = player.getWeaponAmmo(weapon.hash);
+                const tintIndex = player.getWeaponTintIndex(weapon.hash);
+                const components = player.getWeaponComponents(weapon.hash);
+                
+                console.log('[WeaponMenu] Found weapon:', weaponDef.name, 'hash:', weapon.hash, 'ammo:', ammo);
                 
                 allWeapons.push({
-                    hash: weaponHash,
+                    hash: weapon.hash,
                     name: weaponDef.name,
                     ammo: ammo,
                     tintIndex: tintIndex,
@@ -186,6 +195,7 @@ alt.onClient(WeaponMenuEvents.toServer.getCurrentWeapons, (player: alt.Player) =
             }
         }
 
+        console.log('[WeaponMenu] Sending', allWeapons.length, 'weapons to client');
         const webview = Rebar.player.useWebview(player);
         webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, allWeapons);
     } catch (error) {
