@@ -21,9 +21,10 @@ function startFlyMode() {
     const player = alt.Player.local;
     const ped = player.scriptID;
     
-    // Enable fly mode settings
+    // Enable fly mode settings without changing collision (to prevent model change)
     native.setEntityInvincible(ped, true);
-    native.setEntityCollision(ped, false, false);
+    native.setPedCanRagdoll(ped, false);
+    native.setEntityProofs(ped, true, true, true, true, true, true, true, true);
     
     interval = alt.setInterval(() => {
         if (!isFlyEnabled) {
@@ -33,8 +34,9 @@ function startFlyMode() {
         const pos = player.pos;
         const rot = native.getGameplayCamRot(2);
 
-        // Prevent falling
+        // Prevent falling and make noclip-like by resetting velocity
         native.setEntityVelocity(ped, 0, 0, 0);
+        native.setEntityHasGravity(ped, false);
 
         // Calculate movement direction
         let velocity = new alt.Vector3(0, 0, 0);
@@ -109,7 +111,9 @@ function stopFlyMode() {
 
     // Re-enable normal physics
     native.setEntityInvincible(ped, false);
-    native.setEntityCollision(ped, true, true);
+    native.setPedCanRagdoll(ped, true);
+    native.setEntityProofs(ped, false, false, false, false, false, false, false, false);
+    native.setEntityHasGravity(ped, true);
 }
 
 function toggleFly(enabled: boolean) {
