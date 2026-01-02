@@ -6,10 +6,10 @@ import { FlyEvents } from '../shared/flyEvents.js';
 const Rebar = useRebarClient();
 
 let isFlyEnabled = false;
-let flySpeed = 1.0;
-const baseFlySpeed = 0.5;
-const maxFlySpeed = 5.0;
-const minFlySpeed = 0.1;
+let flySpeed = 3.0;
+const baseFlySpeed = 3.0;
+const maxFlySpeed = 15.0;
+const minFlySpeed = 1.0;
 
 let interval: number | undefined;
 
@@ -21,10 +21,11 @@ function startFlyMode() {
     const player = alt.Player.local;
     const ped = player.scriptID;
     
-    // Enable fly mode settings without changing collision (to prevent model change)
+    // Enable fly mode settings
     native.setEntityInvincible(ped, true);
     native.setPedCanRagdoll(ped, false);
     native.setEntityProofs(ped, true, true, true, true, true, true, true, true);
+    native.setEntityHasGravity(ped, false);
     
     interval = alt.setInterval(() => {
         if (!isFlyEnabled) {
@@ -34,9 +35,8 @@ function startFlyMode() {
         const pos = player.pos;
         const rot = native.getGameplayCamRot(2);
 
-        // Prevent falling and make noclip-like by resetting velocity
+        // Prevent falling
         native.setEntityVelocity(ped, 0, 0, 0);
-        native.setEntityHasGravity(ped, false);
 
         // Calculate movement direction
         let velocity = new alt.Vector3(0, 0, 0);
@@ -79,10 +79,10 @@ function startFlyMode() {
 
         // Speed adjustment (Mouse Wheel)
         if (native.isControlPressed(0, 241)) { // Mouse Wheel Up
-            flySpeed = Math.min(flySpeed + 0.1, maxFlySpeed);
+            flySpeed = Math.min(flySpeed + 0.5, maxFlySpeed);
         }
         if (native.isControlPressed(0, 242)) { // Mouse Wheel Down
-            flySpeed = Math.max(flySpeed - 0.1, minFlySpeed);
+            flySpeed = Math.max(flySpeed - 0.5, minFlySpeed);
         }
 
         // Apply movement
