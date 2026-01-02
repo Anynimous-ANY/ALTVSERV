@@ -15,7 +15,7 @@ export const WEAPONS: Weapon[] = [
     { name: 'Golf Club', hash: 'weapon_golfclub', category: 'Melee', ammo: 0 },
     { name: 'Crowbar', hash: 'weapon_crowbar', category: 'Melee', ammo: 0 },
     { name: 'Bottle', hash: 'weapon_bottle', category: 'Melee', ammo: 0 },
-    { name: 'Dagger', hash: 'weapon_dagger', category: 'Melee', ammo: 0 },
+    { name: 'Antique Cavalry Dagger', hash: 'weapon_dagger', category: 'Melee', ammo: 0 },
     { name: 'Hatchet', hash: 'weapon_hatchet', category: 'Melee', ammo: 0 },
     { name: 'Knuckle Duster', hash: 'weapon_knuckle', category: 'Melee', ammo: 0 },
     { name: 'Machete', hash: 'weapon_machete', category: 'Melee', ammo: 0 },
@@ -25,7 +25,8 @@ export const WEAPONS: Weapon[] = [
     { name: 'Wrench', hash: 'weapon_wrench', category: 'Melee', ammo: 0 },
     { name: 'Battle Axe', hash: 'weapon_battleaxe', category: 'Melee', ammo: 0 },
     { name: 'Stone Hatchet', hash: 'weapon_stone_hatchet', category: 'Melee', ammo: 0 },
-    { name: 'Antique Cavalry Dagger', hash: 'weapon_antique_cavalry_dagger', category: 'Melee', ammo: 0 },
+    { name: 'Candy Cane', hash: 'weapon_candycane', category: 'Melee', ammo: 0 },
+    { name: 'The shocker', hash: 'weapon_stunrod', category: 'Melee', ammo: 0 },
 
     // Handguns
     { name: 'Pistol', hash: 'weapon_pistol', category: 'Handguns', ammo: 250 },
@@ -47,6 +48,8 @@ export const WEAPONS: Weapon[] = [
     { name: 'Pistol Mk II', hash: 'weapon_pistol_mk2', category: 'Handguns', ammo: 250 },
     { name: 'SNS Pistol Mk II', hash: 'weapon_snspistol_mk2', category: 'Handguns', ammo: 250 },
     { name: 'Heavy Revolver Mk II', hash: 'weapon_revolver_mk2', category: 'Handguns', ammo: 250 },
+    { name: 'Stun Gun a chier', hash: 'weapon_stungun_mp', category: 'Handguns', ammo: 250 },
+    { name: 'WM 29 Pistol', hash: 'weapon_pistolxm3', category: 'Handguns', ammo: 250 },
 
     // Submachine Guns
     { name: 'Micro SMG', hash: 'weapon_microsmg', category: 'SMGs', ammo: 500 },
@@ -57,6 +60,7 @@ export const WEAPONS: Weapon[] = [
     { name: 'Mini SMG', hash: 'weapon_minismg', category: 'SMGs', ammo: 500 },
     { name: 'Unholy Hellbringer', hash: 'weapon_raycarbine', category: 'SMGs', ammo: 500 },
     { name: 'SMG Mk II', hash: 'weapon_smg_mk2', category: 'SMGs', ammo: 500 },
+    { name: 'Tactical SMG', hash: 'weapon_tecpistol', category: 'SMGs', ammo: 500 },
 
     // Shotguns
     { name: 'Pump Shotgun', hash: 'weapon_pumpshotgun', category: 'Shotguns', ammo: 250 },
@@ -66,7 +70,6 @@ export const WEAPONS: Weapon[] = [
     { name: 'Heavy Shotgun', hash: 'weapon_heavyshotgun', category: 'Shotguns', ammo: 250 },
     { name: 'Double Barrel Shotgun', hash: 'weapon_dbshotgun', category: 'Shotguns', ammo: 250 },
     { name: 'Sweeper Shotgun', hash: 'weapon_autoshotgun', category: 'Shotguns', ammo: 250 },
-    { name: 'Musket', hash: 'weapon_musket', category: 'Shotguns', ammo: 250 },
     { name: 'Pump Shotgun Mk II', hash: 'weapon_pumpshotgun_mk2', category: 'Shotguns', ammo: 250 },
     { name: 'Combat Shotgun', hash: 'weapon_combatshotgun', category: 'Shotguns', ammo: 250 },
 
@@ -98,6 +101,7 @@ export const WEAPONS: Weapon[] = [
     { name: 'Precision Rifle', hash: 'weapon_precisionrifle', category: 'Sniper Rifles', ammo: 250 },
     { name: 'Heavy Sniper Mk II', hash: 'weapon_heavysniper_mk2', category: 'Sniper Rifles', ammo: 250 },
     { name: 'Marksman Rifle Mk II', hash: 'weapon_marksmanrifle_mk2', category: 'Sniper Rifles', ammo: 250 },
+    { name: 'Musket', hash: 'weapon_musket', category: 'Shotguns', ammo: 250 },
 
     // Heavy Weapons
     { name: 'RPG', hash: 'weapon_rpg', category: 'Heavy Weapons', ammo: 20 },
@@ -109,6 +113,8 @@ export const WEAPONS: Weapon[] = [
     { name: 'Widowmaker', hash: 'weapon_rayminigun', category: 'Heavy Weapons', ammo: 5000 },
     { name: 'Railgun', hash: 'weapon_railgun', category: 'Heavy Weapons', ammo: 20 },
     { name: 'Compact EMP Launcher', hash: 'weapon_emplauncher', category: 'Heavy Weapons', ammo: 20 },
+    { name: 'Railgun', hash: 'weapon_railgunxm3', category: 'Heavy Weapons', ammo: 20 },
+    { name: 'Grenade Launcher Smoke', hash: 'weapon_grenadelauncher_smoke', category: 'Heavy Weapons', ammo: 20 },
 
     // Throwables
     { name: 'Grenade', hash: 'weapon_grenade', category: 'Throwables', ammo: 25 },
@@ -127,4 +133,6 @@ export const WEAPONS: Weapon[] = [
     { name: 'Jerry Can', hash: 'weapon_petrolcan', category: 'Misc', ammo: 1000 },
     { name: 'Fire Extinguisher', hash: 'weapon_fireextinguisher', category: 'Misc', ammo: 1000 },
     { name: 'Parachute', hash: 'gadget_parachute', category: 'Misc', ammo: 0 },
+    { name: 'Hazardous Jerry Can', hash: 'weapon_hazardcan', category: 'Misc', ammo: 1000 },
+    { name: 'Fertilizer Can', hash: 'weapon_fertilizercan', category: 'Misc', ammo: 1000 },
 ];
