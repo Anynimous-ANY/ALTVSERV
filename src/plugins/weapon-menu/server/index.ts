@@ -168,25 +168,29 @@ alt.onClient(WeaponMenuEvents.toServer.getCurrentWeapons, (player: alt.Player) =
         // Get all weapons the player currently has
         const allWeapons: any[] = [];
         
-        // Get all weapons from player (includes all weapon hashes they have)
-        const playerWeapons = player.weapons;
+        console.log('[WeaponMenu] Getting current weapons for player:', player.name);
+        console.log('[WeaponMenu] player.weapons type:', typeof player.weapons, 'value:', player.weapons);
         
-        console.log('[WeaponMenu] Player has', playerWeapons.length, 'weapons');
+        // Try to get weapons using getAllWeapons if available
+        if (typeof player.getAllWeapons === 'function') {
+            const weaponArray = player.getAllWeapons();
+            console.log('[WeaponMenu] getAllWeapons() returned:', weaponArray);
+        }
         
-        // Iterate through player's weapons
-        for (const weapon of playerWeapons) {
-            // Find the weapon definition by matching the hash
-            const weaponDef = WEAPONS.find((w) => alt.hash(w.hash) === weapon.hash);
+        // Iterate through all known weapons and check if player has them
+        for (const weaponDef of WEAPONS) {
+            const weaponHash = alt.hash(weaponDef.hash);
             
-            if (weaponDef) {
-                const ammo = player.getWeaponAmmo(weapon.hash);
-                const tintIndex = player.getWeaponTintIndex(weapon.hash);
-                const components = player.getWeaponComponents(weapon.hash);
+            // Check if player has this weapon
+            if (player.hasWeapon(weaponHash)) {
+                const ammo = player.getWeaponAmmo(weaponHash);
+                const tintIndex = player.getWeaponTintIndex(weaponHash);
+                const components = player.getWeaponComponents(weaponHash);
                 
-                console.log('[WeaponMenu] Found weapon:', weaponDef.name, 'hash:', weapon.hash, 'ammo:', ammo);
+                console.log('[WeaponMenu] Player has weapon:', weaponDef.name, 'hash:', weaponHash, 'ammo:', ammo);
                 
                 allWeapons.push({
-                    hash: weapon.hash,
+                    hash: weaponHash,
                     name: weaponDef.name,
                     ammo: ammo,
                     tintIndex: tintIndex,
