@@ -401,12 +401,18 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
         const currentAmmo = player.getWeaponAmmo(weaponHash);
         const currentTint = weaponData.tintIndex;
         const currentComponents = weaponData.components || [];
+        
+        // Store current weapon to re-select it after
+        const currentWeaponHash = player.currentWeapon;
 
         // Remove the weapon temporarily
         player.removeWeapon(weaponHash);
 
         // Give the weapon back with all components including the new one
         player.giveWeapon(weaponHash, currentAmmo, true);
+        
+        // Set this as current weapon to ensure components apply properly
+        player.setCurrentWeapon(weaponHash);
         
         // Re-apply tint
         player.setWeaponTintIndex(weaponHash, currentTint);
@@ -418,6 +424,11 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
         
         // Add the new component
         player.addWeaponComponent(weaponHash, componentHash);
+        
+        // Restore original weapon if it was different
+        if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0) {
+            player.setCurrentWeapon(currentWeaponHash);
+        }
 
         rPlayer.notify.showNotification('Component added');
 
@@ -485,6 +496,9 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
 
         // Filter out the component to remove
         const remainingComponents = currentComponents.filter(c => c !== componentHash);
+        
+        // Store current weapon to re-select it after
+        const currentWeaponHash = player.currentWeapon;
 
         // Remove the weapon temporarily
         player.removeWeapon(weaponHash);
@@ -492,12 +506,20 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
         // Give the weapon back with remaining components
         player.giveWeapon(weaponHash, currentAmmo, true);
         
+        // Set this as current weapon to ensure components apply properly
+        player.setCurrentWeapon(weaponHash);
+        
         // Re-apply tint
         player.setWeaponTintIndex(weaponHash, currentTint);
         
         // Re-apply remaining components
         for (const comp of remainingComponents) {
             player.addWeaponComponent(weaponHash, comp);
+        }
+        
+        // Restore original weapon if it was different
+        if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0) {
+            player.setCurrentWeapon(currentWeaponHash);
         }
 
         rPlayer.notify.showNotification('Component removed');
