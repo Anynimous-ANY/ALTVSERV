@@ -395,94 +395,12 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
             return;
         }
 
-        // Get current weapon state before modification
-        const weaponData = player.weapons.find(w => w.hash === weaponHash);
-        if (!weaponData) {
-            console.log(`[WeaponMenu] ERROR: Weapon ${weaponHash} not found in player.weapons array`);
-            return;
-        }
-
-        const currentAmmo = player.getWeaponAmmo(weaponHash);
-        const currentTint = weaponData.tintIndex;
-        const currentComponents = weaponData.components || [];
-        
-        console.log(`[WeaponMenu] BEFORE: ammo=${currentAmmo}, tint=${currentTint}, components=[${currentComponents.join(', ')}]`);
-        
-        // Store current weapon to re-select it after
-        const currentWeaponHash = player.currentWeapon;
-        console.log(`[WeaponMenu] Current weapon hash: ${currentWeaponHash}`);
-
-        // Remove the weapon completely first
-        console.log(`[WeaponMenu] Step 1: Removing weapon...`);
-        player.removeWeapon(weaponHash);
-        
-        // Wait a tick to ensure weapon is removed
-        await new Promise(resolve => alt.nextTick(resolve));
-
-        // Give the weapon back with maximum possible ammo (9999)
-        // This ensures extended clips work by setting a high base ammo
-        console.log(`[WeaponMenu] Step 2: Giving weapon back with 9999 ammo...`);
-        player.giveWeapon(weaponHash, 9999, false);
-        
-        // Set this as current weapon to ensure components apply
-        console.log(`[WeaponMenu] Step 3: Setting weapon as current...`);
-        player.currentWeapon = weaponHash;
-        
-        // Wait for weapon to be fully equipped
-        await new Promise(resolve => alt.nextTick(resolve));
-        
-        // Apply tint first
-        console.log(`[WeaponMenu] Step 4: Applying tint ${currentTint}...`);
-        player.setWeaponTintIndex(weaponHash, currentTint);
-        
-        // Apply ALL components including the new one
-        const allComponents = [...currentComponents];
-        if (!allComponents.includes(componentHash)) {
-            allComponents.push(componentHash);
-        }
-        
-        console.log(`[WeaponMenu] Step 5: Applying ${allComponents.length} components: [${allComponents.join(', ')}]`);
-        // Add each component one by one with small delays
-        for (let i = 0; i < allComponents.length; i++) {
-            const comp = allComponents[i];
-            console.log(`[WeaponMenu]   - Adding component ${i + 1}/${allComponents.length}: ${comp}`);
-            player.addWeaponComponent(weaponHash, comp);
-            await new Promise(resolve => alt.nextTick(resolve));
-        }
-        
-        // Set the correct ammo amount after all components are applied
-        // Extended clips increase capacity, so we set current ammo
-        console.log(`[WeaponMenu] Step 6: Setting ammo to ${currentAmmo}...`);
-        player.setWeaponAmmo(weaponHash, currentAmmo);
-        
-        // FORCE GTA V to visually update the weapon by switching away and back
-        // This ensures components appear on the weapon model
-        console.log(`[WeaponMenu] Step 7: Forcing weapon model refresh...`);
-        const unarmedHash = alt.hash('weapon_unarmed');
-        player.currentWeapon = unarmedHash;
-        await new Promise(resolve => alt.nextTick(resolve));
-        await new Promise(resolve => alt.nextTick(resolve));
-        player.currentWeapon = weaponHash;
-        await new Promise(resolve => alt.nextTick(resolve));
-        
-        // Check final state
-        const finalAmmo = player.getWeaponAmmo(weaponHash);
-        const finalWeaponData = player.weapons.find((w) => w.hash === weaponHash);
-        console.log(`[WeaponMenu] AFTER: ammo=${finalAmmo}, components in player.weapons=[${finalWeaponData?.components?.join(', ') || 'none'}]`);
-        console.log(`[WeaponMenu] Expected components: [${allComponents.join(', ')}]`);
-        
-        // Build the updated components list
-        const updatedComponents = allComponents;
-        
-        // Restore original weapon if it was different
-        if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0 && currentWeaponHash !== unarmedHash) {
-            await new Promise(resolve => alt.nextTick(resolve));
-            player.currentWeapon = currentWeaponHash;
-            console.log(`[WeaponMenu] Step 8: Restored original weapon ${currentWeaponHash}`);
-        }
+        // Simply add the component using native method
+        // The game engine handles all visual updates and persistence
+        player.addWeaponComponent(weaponHash, componentHash);
+        console.log(`[WeaponMenu] Component ${componentHash} added to weapon ${weaponHash}`);
 
         rPlayer.notify.showNotification('Component added');
-        console.log(`[WeaponMenu] Component addition complete!`);
 
         // Send updated weapons list
         const allWeapons: any[] = [];
@@ -497,15 +415,12 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
                 }
             }
 
-            // Use manually tracked components for the weapon we just modified
-            const componentsToUse = weapon.hash === weaponHash ? updatedComponents : (weapon.components || []);
-
             allWeapons.push({
                 hash: weapon.hash,
                 name: weaponName,
                 ammo: player.getWeaponAmmo(weapon.hash),
                 tintIndex: weapon.tintIndex,
-                components: componentsToUse,
+                components: weapon.components || [],
             });
         }
 
@@ -542,87 +457,12 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
             return;
         }
 
-        // Get current weapon state before modification
-        const weaponData = player.weapons.find(w => w.hash === weaponHash);
-        if (!weaponData) {
-            console.log(`[WeaponMenu] ERROR: Weapon ${weaponHash} not found in player.weapons array`);
-            return;
-        }
-
-        const currentAmmo = player.getWeaponAmmo(weaponHash);
-        const currentTint = weaponData.tintIndex;
-        const currentComponents = weaponData.components || [];
-
-        console.log(`[WeaponMenu] BEFORE REMOVE: ammo=${currentAmmo}, tint=${currentTint}, components=[${currentComponents.join(', ')}]`);
-
-        // Filter out the component to remove
-        const remainingComponents = currentComponents.filter(c => c !== componentHash);
-        
-        console.log(`[WeaponMenu] Components after filter: [${remainingComponents.join(', ')}]`);
-        
-        // Store current weapon to re-select it after
-        const currentWeaponHash = player.currentWeapon;
-        console.log(`[WeaponMenu] Current weapon hash: ${currentWeaponHash}`);
-
-        // Remove the weapon completely
-        console.log(`[WeaponMenu] Step 1: Removing weapon...`);
-        player.removeWeapon(weaponHash);
-        
-        // Wait a tick to ensure weapon is removed
-        await new Promise(resolve => alt.nextTick(resolve));
-
-        // Give the weapon back with maximum ammo initially
-        console.log(`[WeaponMenu] Step 2: Giving weapon back with 9999 ammo...`);
-        player.giveWeapon(weaponHash, 9999, false);
-        
-        // Set this as current weapon to ensure components apply
-        console.log(`[WeaponMenu] Step 3: Setting weapon as current...`);
-        player.currentWeapon = weaponHash;
-        
-        // Wait for weapon to be fully equipped
-        await new Promise(resolve => alt.nextTick(resolve));
-        
-        // Apply tint first
-        console.log(`[WeaponMenu] Step 4: Applying tint ${currentTint}...`);
-        player.setWeaponTintIndex(weaponHash, currentTint);
-        
-        // Apply remaining components with delays
-        console.log(`[WeaponMenu] Step 5: Applying ${remainingComponents.length} remaining components: [${remainingComponents.join(', ')}]`);
-        for (let i = 0; i < remainingComponents.length; i++) {
-            const comp = remainingComponents[i];
-            console.log(`[WeaponMenu]   - Adding component ${i + 1}/${remainingComponents.length}: ${comp}`);
-            player.addWeaponComponent(weaponHash, comp);
-            await new Promise(resolve => alt.nextTick(resolve));
-        }
-        
-        // Set the correct ammo amount after components
-        console.log(`[WeaponMenu] Step 6: Setting ammo to ${currentAmmo}...`);
-        player.setWeaponAmmo(weaponHash, currentAmmo);
-        
-        // FORCE GTA V to visually update the weapon by switching away and back
-        console.log(`[WeaponMenu] Step 7: Forcing weapon model refresh...`);
-        const unarmedHash = alt.hash('weapon_unarmed');
-        player.currentWeapon = unarmedHash;
-        await new Promise(resolve => alt.nextTick(resolve));
-        await new Promise(resolve => alt.nextTick(resolve));
-        player.currentWeapon = weaponHash;
-        await new Promise(resolve => alt.nextTick(resolve));
-        
-        // Check final state
-        const finalAmmo = player.getWeaponAmmo(weaponHash);
-        const finalWeaponData = player.weapons.find((w) => w.hash === weaponHash);
-        console.log(`[WeaponMenu] AFTER REMOVE: ammo=${finalAmmo}, components in player.weapons=[${finalWeaponData?.components?.join(', ') || 'none'}]`);
-        console.log(`[WeaponMenu] Expected components: [${remainingComponents.join(', ')}]`);
-        
-        // Restore original weapon if it was different
-        if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0 && currentWeaponHash !== unarmedHash) {
-            await new Promise(resolve => alt.nextTick(resolve));
-            player.currentWeapon = currentWeaponHash;
-            console.log(`[WeaponMenu] Step 8: Restored original weapon ${currentWeaponHash}`);
-        }
+        // Simply remove the component using native method
+        // The game engine handles all visual updates and persistence
+        player.removeWeaponComponent(weaponHash, componentHash);
+        console.log(`[WeaponMenu] Component ${componentHash} removed from weapon ${weaponHash}`);
 
         rPlayer.notify.showNotification('Component removed');
-        console.log(`[WeaponMenu] Component removal complete!`);
 
         // Send updated weapons list
         const allWeapons: any[] = [];
@@ -637,15 +477,12 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
                 }
             }
 
-            // Use manually tracked components for the weapon we just modified
-            const componentsToUse = weapon.hash === weaponHash ? remainingComponents : (weapon.components || []);
-
             allWeapons.push({
                 hash: weapon.hash,
                 name: weaponName,
                 ammo: player.getWeaponAmmo(weapon.hash),
                 tintIndex: weapon.tintIndex,
-                components: componentsToUse,
+                components: weapon.components || [],
             });
         }
 
