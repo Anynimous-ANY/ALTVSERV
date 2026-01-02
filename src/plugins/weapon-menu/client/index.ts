@@ -24,56 +24,14 @@ alt.everyTick(() => {
         return;
     }
 
-    // Disable camera movement
-    native.disableControlAction(0, 1, true); // LookLeftRight
-    native.disableControlAction(0, 2, true); // LookUpDown
-    native.disableControlAction(0, 3, true); // LookUpOnly
-    native.disableControlAction(0, 4, true); // LookDownOnly
-    native.disableControlAction(0, 5, true); // LookLeft
-    native.disableControlAction(0, 6, true); // LookRight
-
-    // Disable attack controls
-    native.disableControlAction(0, 24, true); // Attack
-    native.disableControlAction(0, 25, true); // Aim
-    native.disableControlAction(0, 140, true); // Melee Attack Light
-    native.disableControlAction(0, 141, true); // Melee Attack Heavy
-    native.disableControlAction(0, 142, true); // Melee Attack Alternate
-
-    // Disable weapon wheel
-    native.disableControlAction(0, 14, true); // Weapon Wheel Up
-    native.disableControlAction(0, 15, true); // Weapon Wheel Down
-    native.disableControlAction(0, 16, true); // Weapon Wheel Left
-    native.disableControlAction(0, 17, true); // Weapon Wheel Right
-
-    // Disable menu controls (map, pause menu, etc.)
-    native.disableControlAction(0, 199, true); // Pause Menu (P)
-    native.disableControlAction(0, 200, true); // Pause Menu Alternate
-
-    // Disable phone and interaction menu
-    native.disableControlAction(0, 27, true); // Phone
-    native.disableControlAction(0, 243, true); // Interaction Menu (M)
-
-    // Disable radio wheel
-    native.disableControlAction(0, 85, true); // Radio Wheel
-
-    // Disable vehicle controls (in case player is in vehicle)
-    native.disableControlAction(0, 71, true); // Accelerate
-    native.disableControlAction(0, 72, true); // Brake/Reverse
-    native.disableControlAction(0, 59, true); // Steering Left
-    native.disableControlAction(0, 60, true); // Steering Right
-    native.disableControlAction(0, 85, true); // Radio Wheel
-    native.disableControlAction(0, 86, true); // Horn
-
-    // Disable enter/exit vehicle
-    native.disableControlAction(0, 23, true); // Enter Vehicle
-
-    // Disable jump, sprint, crouch
-    native.disableControlAction(0, 22, true); // Jump
-    native.disableControlAction(0, 21, true); // Sprint
-    native.disableControlAction(0, 36, true); // Crouch
-
-    // Disable character switch
-    native.disableControlAction(0, 19, true); // Character Switch (Alt)
+    // Disable ALL control actions to prevent any GTA controls from triggering
+    // This includes camera, movement, attacks, menus, vehicle controls, etc.
+    // Using disableAllControlActions is more comprehensive than listing individual controls
+    native.disableAllControlActions(0);
+    
+    // Also disable control group 1 and 2 for additional coverage
+    native.disableAllControlActions(1);
+    native.disableAllControlActions(2);
 });
 
 // Handle key press for closing the menu
