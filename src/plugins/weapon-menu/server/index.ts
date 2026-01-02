@@ -425,6 +425,12 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
         // Add the new component
         player.addWeaponComponent(weaponHash, componentHash);
         
+        // Build the updated components list manually
+        const updatedComponents = [...currentComponents];
+        if (!updatedComponents.includes(componentHash)) {
+            updatedComponents.push(componentHash);
+        }
+        
         // Restore original weapon if it was different
         if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0) {
             player.setCurrentWeapon(currentWeaponHash);
@@ -445,12 +451,15 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
                 }
             }
 
+            // Use manually tracked components for the weapon we just modified
+            const componentsToUse = weapon.hash === weaponHash ? updatedComponents : (weapon.components || []);
+
             allWeapons.push({
                 hash: weapon.hash,
                 name: weaponName,
                 ammo: player.getWeaponAmmo(weapon.hash),
                 tintIndex: weapon.tintIndex,
-                components: weapon.components || [],
+                components: componentsToUse,
             });
         }
 
@@ -537,12 +546,15 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
                 }
             }
 
+            // Use manually tracked components for the weapon we just modified
+            const componentsToUse = weapon.hash === weaponHash ? remainingComponents : (weapon.components || []);
+
             allWeapons.push({
                 hash: weapon.hash,
                 name: weaponName,
                 ammo: player.getWeaponAmmo(weapon.hash),
                 tintIndex: weapon.tintIndex,
-                components: weapon.components || [],
+                components: componentsToUse,
             });
         }
 
