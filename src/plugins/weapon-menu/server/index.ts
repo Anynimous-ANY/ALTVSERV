@@ -455,6 +455,16 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
         console.log(`[WeaponMenu] Step 6: Setting ammo to ${currentAmmo}...`);
         player.setWeaponAmmo(weaponHash, currentAmmo);
         
+        // FORCE GTA V to visually update the weapon by switching away and back
+        // This ensures components appear on the weapon model
+        console.log(`[WeaponMenu] Step 7: Forcing weapon model refresh...`);
+        const unarmedHash = alt.hash('weapon_unarmed');
+        player.currentWeapon = unarmedHash;
+        await new Promise(resolve => alt.nextTick(resolve));
+        await new Promise(resolve => alt.nextTick(resolve));
+        player.currentWeapon = weaponHash;
+        await new Promise(resolve => alt.nextTick(resolve));
+        
         // Check final state
         const finalAmmo = player.getWeaponAmmo(weaponHash);
         const finalWeaponData = player.weapons.find((w) => w.hash === weaponHash);
@@ -465,10 +475,10 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
         const updatedComponents = allComponents;
         
         // Restore original weapon if it was different
-        if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0) {
+        if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0 && currentWeaponHash !== unarmedHash) {
             await new Promise(resolve => alt.nextTick(resolve));
             player.currentWeapon = currentWeaponHash;
-            console.log(`[WeaponMenu] Step 7: Restored original weapon ${currentWeaponHash}`);
+            console.log(`[WeaponMenu] Step 8: Restored original weapon ${currentWeaponHash}`);
         }
 
         rPlayer.notify.showNotification('Component added');
@@ -589,6 +599,15 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
         console.log(`[WeaponMenu] Step 6: Setting ammo to ${currentAmmo}...`);
         player.setWeaponAmmo(weaponHash, currentAmmo);
         
+        // FORCE GTA V to visually update the weapon by switching away and back
+        console.log(`[WeaponMenu] Step 7: Forcing weapon model refresh...`);
+        const unarmedHash = alt.hash('weapon_unarmed');
+        player.currentWeapon = unarmedHash;
+        await new Promise(resolve => alt.nextTick(resolve));
+        await new Promise(resolve => alt.nextTick(resolve));
+        player.currentWeapon = weaponHash;
+        await new Promise(resolve => alt.nextTick(resolve));
+        
         // Check final state
         const finalAmmo = player.getWeaponAmmo(weaponHash);
         const finalWeaponData = player.weapons.find((w) => w.hash === weaponHash);
@@ -596,10 +615,10 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
         console.log(`[WeaponMenu] Expected components: [${remainingComponents.join(', ')}]`);
         
         // Restore original weapon if it was different
-        if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0) {
+        if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0 && currentWeaponHash !== unarmedHash) {
             await new Promise(resolve => alt.nextTick(resolve));
             player.currentWeapon = currentWeaponHash;
-            console.log(`[WeaponMenu] Step 7: Restored original weapon ${currentWeaponHash}`);
+            console.log(`[WeaponMenu] Step 8: Restored original weapon ${currentWeaponHash}`);
         }
 
         rPlayer.notify.showNotification('Component removed');
