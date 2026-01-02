@@ -412,7 +412,7 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
         player.giveWeapon(weaponHash, currentAmmo, true);
         
         // Set this as current weapon to ensure components apply properly
-        player.setCurrentWeapon(weaponHash);
+        player.currentWeapon = weaponHash;
         
         // Re-apply tint
         player.setWeaponTintIndex(weaponHash, currentTint);
@@ -433,7 +433,7 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
         
         // Restore original weapon if it was different
         if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0) {
-            player.setCurrentWeapon(currentWeaponHash);
+            player.currentWeapon = currentWeaponHash;
         }
 
         rPlayer.notify.showNotification('Component added');
@@ -516,7 +516,7 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
         player.giveWeapon(weaponHash, currentAmmo, true);
         
         // Set this as current weapon to ensure components apply properly
-        player.setCurrentWeapon(weaponHash);
+        player.currentWeapon = weaponHash;
         
         // Re-apply tint
         player.setWeaponTintIndex(weaponHash, currentTint);
@@ -528,7 +528,7 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
         
         // Restore original weapon if it was different
         if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0) {
-            player.setCurrentWeapon(currentWeaponHash);
+            player.currentWeapon = currentWeaponHash;
         }
 
         rPlayer.notify.showNotification('Component removed');
