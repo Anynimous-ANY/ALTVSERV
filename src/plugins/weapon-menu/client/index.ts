@@ -8,9 +8,6 @@ import { WEAPONS } from '../shared/weapons.js';
 const Rebar = useRebarClient();
 const webview = Rebar.webview.useWebview();
 
-let isMenuOpen = false;
-let controlsInterval: number | undefined;
-
 // Validate weapon hash
 function isValidWeaponHash(hash: string): boolean {
     if (!hash || typeof hash !== 'string') {
@@ -20,8 +17,10 @@ function isValidWeaponHash(hash: string): boolean {
 }
 
 // Tick function to disable controls every frame while menu is open
-function disableControlsTick() {
-    if (!isMenuOpen) {
+// This runs every frame and checks if the menu is open
+alt.everyTick(() => {
+    // Only disable controls if the WeaponMenu page is specifically open
+    if (!webview.isSpecificPageOpen('WeaponMenu')) {
         return;
     }
 
@@ -45,7 +44,7 @@ function disableControlsTick() {
     native.disableControlAction(0, 15, true); // Weapon Wheel Down
     native.disableControlAction(0, 16, true); // Weapon Wheel Left
     native.disableControlAction(0, 17, true); // Weapon Wheel Right
-}
+});
 
 // Handle key press for closing the menu
 alt.on('keyup', (key: number) => {
@@ -118,60 +117,5 @@ webview.on('weaponmenu:client:requestClose', () => {
         webview.hide('WeaponMenu');
     } catch (error) {
         console.error('Error closing menu:', error);
-    }
-});
-
-// When the webview is shown, focus it and disable game controls
-alt.on('rebar:pageShow', (pageName: string) => {
-    try {
-        if (pageName !== 'WeaponMenu') {
-            return;
-        }
-
-        if (!webview) {
-            return;
-        }
-
-        isMenuOpen = true;
-        webview.focus();
-        alt.toggleGameControls(false);
-        alt.showCursor(true);
-
-        // Start the controls disable interval
-        if (!controlsInterval) {
-            controlsInterval = alt.everyTick(disableControlsTick);
-        }
-
-        webview.emit(WeaponMenuEvents.toWebview.open);
-    } catch (error) {
-        console.error('Error showing weapon menu:', error);
-    }
-});
-
-// When the webview is hidden, unfocus it and enable game controls
-alt.on('rebar:pageHide', (pageName: string) => {
-    try {
-        if (pageName !== 'WeaponMenu') {
-            return;
-        }
-
-        if (!webview) {
-            return;
-        }
-
-        isMenuOpen = false;
-        webview.unfocus();
-        alt.toggleGameControls(true);
-        alt.showCursor(false);
-
-        // Clear the controls disable interval
-        if (controlsInterval) {
-            alt.clearEveryTick(controlsInterval);
-            controlsInterval = undefined;
-        }
-
-        webview.emit(WeaponMenuEvents.toWebview.close);
-    } catch (error) {
-        console.error('Error hiding weapon menu:', error);
     }
 });
