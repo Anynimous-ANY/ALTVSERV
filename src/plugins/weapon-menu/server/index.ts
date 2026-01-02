@@ -405,37 +405,47 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
         // Store current weapon to re-select it after
         const currentWeaponHash = player.currentWeapon;
 
-        // Remove the weapon temporarily
+        // Remove the weapon completely first
         player.removeWeapon(weaponHash);
-
-        // Give the weapon back with ammo
-        player.giveWeapon(weaponHash, currentAmmo, false);
         
-        // Set this as current weapon FIRST to ensure components apply properly
+        // Wait a tick to ensure weapon is removed
+        await new Promise(resolve => alt.nextTick(resolve));
+
+        // Give the weapon back with maximum possible ammo (9999)
+        // This ensures extended clips work by setting a high base ammo
+        player.giveWeapon(weaponHash, 9999, false);
+        
+        // Set this as current weapon to ensure components apply
         player.currentWeapon = weaponHash;
         
-        // Small delay to ensure weapon is fully equipped
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Wait for weapon to be fully equipped
+        await new Promise(resolve => alt.nextTick(resolve));
         
-        // Re-apply tint
+        // Apply tint first
         player.setWeaponTintIndex(weaponHash, currentTint);
         
-        // Re-apply all existing components
-        for (const comp of currentComponents) {
+        // Apply ALL components including the new one
+        const allComponents = [...currentComponents];
+        if (!allComponents.includes(componentHash)) {
+            allComponents.push(componentHash);
+        }
+        
+        // Add each component one by one with small delays
+        for (const comp of allComponents) {
             player.addWeaponComponent(weaponHash, comp);
+            await new Promise(resolve => alt.nextTick(resolve));
         }
         
-        // Add the new component
-        player.addWeaponComponent(weaponHash, componentHash);
+        // Set the correct ammo amount after all components are applied
+        // Extended clips increase capacity, so we set current ammo
+        player.setWeaponAmmo(weaponHash, currentAmmo);
         
-        // Build the updated components list manually
-        const updatedComponents = [...currentComponents];
-        if (!updatedComponents.includes(componentHash)) {
-            updatedComponents.push(componentHash);
-        }
+        // Build the updated components list
+        const updatedComponents = allComponents;
         
         // Restore original weapon if it was different
         if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0) {
+            await new Promise(resolve => alt.nextTick(resolve));
             player.currentWeapon = currentWeaponHash;
         }
 
@@ -512,28 +522,36 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
         // Store current weapon to re-select it after
         const currentWeaponHash = player.currentWeapon;
 
-        // Remove the weapon temporarily
+        // Remove the weapon completely
         player.removeWeapon(weaponHash);
-
-        // Give the weapon back with remaining components
-        player.giveWeapon(weaponHash, currentAmmo, false);
         
-        // Set this as current weapon FIRST to ensure components apply properly
+        // Wait a tick to ensure weapon is removed
+        await new Promise(resolve => alt.nextTick(resolve));
+
+        // Give the weapon back with maximum ammo initially
+        player.giveWeapon(weaponHash, 9999, false);
+        
+        // Set this as current weapon to ensure components apply
         player.currentWeapon = weaponHash;
         
-        // Small delay to ensure weapon is fully equipped
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Wait for weapon to be fully equipped
+        await new Promise(resolve => alt.nextTick(resolve));
         
-        // Re-apply tint
+        // Apply tint first
         player.setWeaponTintIndex(weaponHash, currentTint);
         
-        // Re-apply remaining components
+        // Apply remaining components with delays
         for (const comp of remainingComponents) {
             player.addWeaponComponent(weaponHash, comp);
+            await new Promise(resolve => alt.nextTick(resolve));
         }
+        
+        // Set the correct ammo amount after components
+        player.setWeaponAmmo(weaponHash, currentAmmo);
         
         // Restore original weapon if it was different
         if (currentWeaponHash !== weaponHash && currentWeaponHash !== 0) {
+            await new Promise(resolve => alt.nextTick(resolve));
             player.currentWeapon = currentWeaponHash;
         }
 
