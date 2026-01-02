@@ -165,33 +165,33 @@ alt.onClient(WeaponMenuEvents.toServer.getCurrentWeapons, (player: alt.Player) =
     }
 
     try {
-        const weapon = Rebar.player.useWeapon(player);
-        const currentWeapons = weapon.getWeapons();
-
-        // Enhance weapons data with names from our WEAPONS list
-        const enhancedWeapons = currentWeapons.map((w: any) => {
-            // Find weapon name by converting hash back to string format
-            // weapon.hash is a number, we need to find matching WEAPONS entry
-            let weaponName = `Weapon ${w.hash}`;
-            
-            // Try to find weapon in WEAPONS by hashing each weapon's string hash
-            for (const weaponDef of WEAPONS) {
-                if (alt.hash(weaponDef.hash) === w.hash) {
-                    weaponName = weaponDef.name;
-                    break;
-                }
+        // Get all weapons the player currently has
+        const allWeapons: any[] = [];
+        
+        // Iterate through all known weapons and check if player has them
+        for (const weaponDef of WEAPONS) {
+            const weaponHash = alt.hash(weaponDef.hash);
+            if (player.hasWeapon(weaponHash)) {
+                const ammo = player.getWeaponAmmo(weaponHash);
+                const tintIndex = player.getWeaponTintIndex(weaponHash);
+                const components = player.getWeaponComponents(weaponHash);
+                
+                allWeapons.push({
+                    hash: weaponHash,
+                    name: weaponDef.name,
+                    ammo: ammo,
+                    tintIndex: tintIndex,
+                    components: components || [],
+                });
             }
-            
-            return {
-                ...w,
-                name: weaponName,
-            };
-        });
+        }
 
         const webview = Rebar.player.useWebview(player);
-        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, enhancedWeapons);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, allWeapons);
     } catch (error) {
         console.error('Error getting current weapons:', error);
+        const webview = Rebar.player.useWebview(player);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, []);
     }
 });
 
@@ -213,15 +213,32 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeapon, async (player: alt.Player, 
             return;
         }
 
-        const weapon = Rebar.player.useWeapon(player);
-        await weapon.clearWeapon(weaponHash);
+        // Remove the weapon from player
+        player.removeWeapon(weaponHash);
 
         rPlayer.notify.showNotification('Weapon removed');
 
         // Send updated weapons list
-        const currentWeapons = weapon.getWeapons();
+        const allWeapons: any[] = [];
+        for (const weaponDef of WEAPONS) {
+            const wHash = alt.hash(weaponDef.hash);
+            if (player.hasWeapon(wHash)) {
+                const ammo = player.getWeaponAmmo(wHash);
+                const tintIndex = player.getWeaponTintIndex(wHash);
+                const components = player.getWeaponComponents(wHash);
+                
+                allWeapons.push({
+                    hash: wHash,
+                    name: weaponDef.name,
+                    ammo: ammo,
+                    tintIndex: tintIndex,
+                    components: components || [],
+                });
+            }
+        }
+        
         const webview = Rebar.player.useWebview(player);
-        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, currentWeapons);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, allWeapons);
     } catch (error) {
         console.error('Error removing weapon:', error);
     }
@@ -245,26 +262,37 @@ alt.onClient(WeaponMenuEvents.toServer.setWeaponTint, async (player: alt.Player,
             return;
         }
 
-        const document = Rebar.document.character.useCharacter(player);
-        const weapons = document.getField('weapons') ?? [];
-
-        const weaponIndex = weapons.findIndex((w) => w.hash === weaponHash);
-        if (weaponIndex === -1) {
+        // Check if player has the weapon
+        if (!player.hasWeapon(weaponHash)) {
             return;
         }
 
-        weapons[weaponIndex].tintIndex = tintIndex;
+        // Set the weapon tint
         player.setWeaponTintIndex(weaponHash, tintIndex);
-
-        await document.set('weapons', weapons);
 
         rPlayer.notify.showNotification('Weapon tint changed');
 
         // Send updated weapons list
-        const weapon = Rebar.player.useWeapon(player);
-        const currentWeapons = weapon.getWeapons();
+        const allWeapons: any[] = [];
+        for (const weaponDef of WEAPONS) {
+            const wHash = alt.hash(weaponDef.hash);
+            if (player.hasWeapon(wHash)) {
+                const ammo = player.getWeaponAmmo(wHash);
+                const tintIdx = player.getWeaponTintIndex(wHash);
+                const components = player.getWeaponComponents(wHash);
+                
+                allWeapons.push({
+                    hash: wHash,
+                    name: weaponDef.name,
+                    ammo: ammo,
+                    tintIndex: tintIdx,
+                    components: components || [],
+                });
+            }
+        }
+        
         const webview = Rebar.player.useWebview(player);
-        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, currentWeapons);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, allWeapons);
     } catch (error) {
         console.error('Error setting weapon tint:', error);
     }
@@ -288,26 +316,40 @@ alt.onClient(WeaponMenuEvents.toServer.setWeaponAmmo, async (player: alt.Player,
             return;
         }
 
-        const document = Rebar.document.character.useCharacter(player);
-        const weapons = document.getField('weapons') ?? [];
-
-        const weaponIndex = weapons.findIndex((w) => w.hash === weaponHash);
-        if (weaponIndex === -1) {
+        // Check if player has the weapon
+        if (!player.hasWeapon(weaponHash)) {
             return;
         }
 
-        weapons[weaponIndex].ammo = Math.max(0, ammo);
-        player.setWeaponAmmo(weaponHash, weapons[weaponIndex].ammo);
+        // Clamp ammo between 0 and 9999
+        const clampedAmmo = Math.max(0, Math.min(9999, ammo));
+        
+        // Set the weapon ammo
+        player.setWeaponAmmo(weaponHash, clampedAmmo);
 
-        await document.set('weapons', weapons);
-
-        rPlayer.notify.showNotification(`Weapon ammo set to ${weapons[weaponIndex].ammo}`);
+        rPlayer.notify.showNotification(`Weapon ammo set to ${clampedAmmo}`);
 
         // Send updated weapons list
-        const weapon = Rebar.player.useWeapon(player);
-        const currentWeapons = weapon.getWeapons();
+        const allWeapons: any[] = [];
+        for (const weaponDef of WEAPONS) {
+            const wHash = alt.hash(weaponDef.hash);
+            if (player.hasWeapon(wHash)) {
+                const weaponAmmo = player.getWeaponAmmo(wHash);
+                const tintIndex = player.getWeaponTintIndex(wHash);
+                const components = player.getWeaponComponents(wHash);
+                
+                allWeapons.push({
+                    hash: wHash,
+                    name: weaponDef.name,
+                    ammo: weaponAmmo,
+                    tintIndex: tintIndex,
+                    components: components || [],
+                });
+            }
+        }
+        
         const webview = Rebar.player.useWebview(player);
-        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, currentWeapons);
+        webview.emit(WeaponMenuEvents.toWebview.setCurrentWeapons, allWeapons);
     } catch (error) {
         console.error('Error setting weapon ammo:', error);
     }
