@@ -8,9 +8,11 @@ const events = useEvents();
 
 const searchQuery = ref('');
 const debouncedSearchQuery = ref('');
-const currentTab = ref<'all' | 'favorites'>('all');
+const currentTab = ref<'all' | 'favorites' | 'modify'>('all');
 const favorites = ref<string[]>([]);
+const currentWeapons = ref<any[]>([]);
 const selectedWeapon = ref<Weapon | null>(null);
+const selectedModifyWeapon = ref<any | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 
@@ -33,6 +35,9 @@ const filteredWeapons = computed(() => {
     // Filter by tab
     if (currentTab.value === 'favorites') {
         weapons = weapons.filter((w) => favorites.value.includes(w.hash));
+    } else if (currentTab.value === 'modify') {
+        // For modify tab, return empty (we show currentWeapons instead)
+        return [];
     }
 
     // Filter by search query
@@ -162,9 +167,61 @@ function handleOpen() {
 
 function handleClose() {
     selectedWeapon.value = null;
+    selectedModifyWeapon.value = null;
     searchQuery.value = '';
     debouncedSearchQuery.value = '';
     error.value = null;
+}
+
+// Modify tab functions
+function loadCurrentWeapons() {
+    try {
+        events.emitServer(WeaponMenuEvents.toServer.getCurrentWeapons);
+    } catch (err) {
+        console.error('Error loading current weapons:', err);
+    }
+}
+
+function setCurrentWeapons(weapons: any[]) {
+    try {
+        currentWeapons.value = weapons || [];
+    } catch (err) {
+        console.error('Error setting current weapons:', err);
+    }
+}
+
+function getWeaponName(hash: number): string {
+    const weapon = WEAPONS.find((w) => w.hash === `weapon_${hash.toString(16)}`);
+    return weapon ? weapon.name : `Weapon ${hash}`;
+}
+
+function removeWeapon(weaponHash: number) {
+    try {
+        events.emitServer(WeaponMenuEvents.toServer.removeWeapon, weaponHash);
+    } catch (err) {
+        console.error('Error removing weapon:', err);
+    }
+}
+
+function changeTint(weaponHash: number, tintIndex: number) {
+    try {
+        events.emitServer(WeaponMenuEvents.toServer.setWeaponTint, weaponHash, tintIndex);
+    } catch (err) {
+        console.error('Error changing tint:', err);
+    }
+}
+
+function changeAmmo(weaponHash: number, ammo: number) {
+    try {
+        const ammoValue = Math.max(0, parseInt(String(ammo)) || 0);
+        events.emitServer(WeaponMenuEvents.toServer.setWeaponAmmo, weaponHash, ammoValue);
+    } catch (err) {
+        console.error('Error changing ammo:', err);
+    }
+}
+
+function selectModifyWeapon(weapon: any) {
+    selectedModifyWeapon.value = weapon;
 }
 
 onMounted(() => {
@@ -175,6 +232,7 @@ onMounted(() => {
         }
 
         events.on(WeaponMenuEvents.toWebview.setFavorites, setFavorites);
+        events.on(WeaponMenuEvents.toWebview.setCurrentWeapons, setCurrentWeapons);
         events.on(WeaponMenuEvents.toWebview.open, handleOpen);
         events.on(WeaponMenuEvents.toWebview.close, handleClose);
         events.emitServer(WeaponMenuEvents.toServer.getFavorites);
@@ -228,7 +286,7 @@ onUnmounted(() => {
         <div class="flex border-b border-gray-700 bg-gray-800" role="tablist">
             <button
                 @click="currentTab = 'all'"
-                class="flex-1 px-4 py-3 font-semibold transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                class="flex-1 px-4 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                 :class="currentTab === 'all' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white'"
                 role="tab"
                 :aria-selected="currentTab === 'all'"
@@ -238,13 +296,23 @@ onUnmounted(() => {
             </button>
             <button
                 @click="currentTab = 'favorites'"
-                class="flex-1 px-4 py-3 font-semibold transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                class="flex-1 px-4 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                 :class="currentTab === 'favorites' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white'"
                 role="tab"
                 :aria-selected="currentTab === 'favorites'"
                 aria-controls="favorites-panel"
             >
                 ⭐ Favorites
+            </button>
+            <button
+                @click="currentTab = 'modify'; loadCurrentWeapons()"
+                class="flex-1 px-4 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                :class="currentTab === 'modify' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white'"
+                role="tab"
+                :aria-selected="currentTab === 'modify'"
+                aria-controls="modify-panel"
+            >
+                🔧 Modify
             </button>
         </div>
 
@@ -253,8 +321,8 @@ onUnmounted(() => {
             <p class="text-gray-400">Loading weapons...</p>
         </div>
 
-        <!-- Weapon List -->
-        <div v-else class="flex-1 overflow-y-auto p-4" role="tabpanel" :id="currentTab === 'all' ? 'all-weapons-panel' : 'favorites-panel'">
+        <!-- Weapon List (All & Favorites tabs) -->
+        <div v-if="currentTab !== 'modify'" v-show="!isLoading" class="flex-1 overflow-y-auto p-4" role="tabpanel" :id="currentTab === 'all' ? 'all-weapons-panel' : 'favorites-panel'">
             <template v-if="Object.keys(groupedWeapons).length > 0">
                 <div v-for="(weapons, category) in groupedWeapons" :key="category" class="mb-4">
                     <h3 class="mb-2 text-sm font-bold uppercase tracking-wide text-gray-400">{{ category }}</h3>
@@ -294,6 +362,85 @@ onUnmounted(() => {
                     </p>
                 </div>
             </template>
+        </div>
+
+        <!-- Modify Weapons Tab -->
+        <div v-if="currentTab === 'modify'" class="flex flex-1 overflow-hidden" role="tabpanel" id="modify-panel">
+            <!-- Weapons List -->
+            <div class="w-1/2 overflow-y-auto border-r border-gray-700 p-4">
+                <h3 class="mb-3 text-sm font-bold uppercase tracking-wide text-gray-400">Your Weapons</h3>
+                <div v-if="currentWeapons.length > 0" class="space-y-2">
+                    <div
+                        v-for="weapon in currentWeapons"
+                        :key="weapon.hash"
+                        @click="selectModifyWeapon(weapon)"
+                        class="cursor-pointer rounded-lg bg-gray-800 px-3 py-2 transition hover:bg-gray-700"
+                        :class="selectedModifyWeapon?.hash === weapon.hash ? 'ring-2 ring-blue-500' : ''"
+                    >
+                        <p class="text-sm font-semibold text-white">{{ getWeaponName(weapon.hash) }}</p>
+                        <p class="text-xs text-gray-400">Ammo: {{ weapon.ammo }}</p>
+                    </div>
+                </div>
+                <div v-else class="flex h-32 items-center justify-center">
+                    <p class="text-sm text-gray-400">No weapons equipped</p>
+                </div>
+            </div>
+
+            <!-- Modification Panel -->
+            <div class="w-1/2 overflow-y-auto p-4">
+                <div v-if="selectedModifyWeapon">
+                    <h3 class="mb-3 text-sm font-bold text-white">{{ getWeaponName(selectedModifyWeapon.hash) }}</h3>
+                    
+                    <!-- Tint Selection -->
+                    <div class="mb-4">
+                        <label class="mb-2 block text-xs font-semibold text-gray-400">Weapon Tint</label>
+                        <select
+                            :value="selectedModifyWeapon.tintIndex"
+                            @change="changeTint(selectedModifyWeapon.hash, parseInt(($event.target as HTMLSelectElement).value))"
+                            class="w-full rounded bg-gray-700 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option :value="0">Default</option>
+                            <option :value="1">Green</option>
+                            <option :value="2">Gold</option>
+                            <option :value="3">Pink</option>
+                            <option :value="4">Army</option>
+                            <option :value="5">LSPD</option>
+                            <option :value="6">Orange</option>
+                            <option :value="7">Platinum</option>
+                        </select>
+                    </div>
+
+                    <!-- Ammo Setting -->
+                    <div class="mb-4">
+                        <label class="mb-2 block text-xs font-semibold text-gray-400">Ammo Amount</label>
+                        <input
+                            type="number"
+                            :value="selectedModifyWeapon.ammo"
+                            @change="changeAmmo(selectedModifyWeapon.hash, parseInt(($event.target as HTMLInputElement).value))"
+                            min="0"
+                            max="9999"
+                            class="w-full rounded bg-gray-700 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <!-- Components Info -->
+                    <div class="mb-4">
+                        <label class="mb-2 block text-xs font-semibold text-gray-400">Components</label>
+                        <p class="text-xs text-gray-400">{{ selectedModifyWeapon.components.length }} attached</p>
+                    </div>
+
+                    <!-- Remove Weapon Button -->
+                    <button
+                        @click="removeWeapon(selectedModifyWeapon.hash)"
+                        class="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                    >
+                        Remove Weapon
+                    </button>
+                </div>
+                <div v-else class="flex h-full items-center justify-center">
+                    <p class="text-sm text-gray-400">Select a weapon to modify</p>
+                </div>
+            </div>
         </div>
 
         <!-- Footer Info -->
