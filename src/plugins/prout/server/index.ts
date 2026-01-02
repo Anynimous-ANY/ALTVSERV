@@ -1,8 +1,12 @@
 import * as alt from 'alt-server';
 import { useRebar } from '@Server/index.js';
+import { FlyEvents } from '../shared/flyEvents.js';
 
 const Rebar = useRebar();
 const Messenger = Rebar.messenger.useMessenger();
+
+// Track fly state for each player
+const flyState = new Map<number, boolean>();
 
 Messenger.commands.register({
     name: 'test',
@@ -109,3 +113,23 @@ Messenger.commands.register({
         },
 });
 
+Messenger.commands.register({
+    name: 'fly',
+    desc: '- toggle fly mode (noclip)',
+    options: { permissions: ['admin'] },
+    callback: async (player) => {
+        const rPlayer = Rebar.usePlayer(player);
+        const currentState = flyState.get(player.id) || false;
+        const newState = !currentState;
+        
+        flyState.set(player.id, newState);
+        alt.emitClient(player, FlyEvents.toClient.toggle, newState);
+        
+        rPlayer.notify.showNotification(newState ? 'Fly mode enabled' : 'Fly mode disabled');
+    },
+});
+
+// Clean up fly state when player disconnects
+alt.on('playerDisconnect', (player) => {
+    flyState.delete(player.id);
+});
