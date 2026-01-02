@@ -28,6 +28,13 @@ watch(searchQuery, (newValue) => {
     }, 300);
 });
 
+// Watch for tab changes to load current weapons when switching to modify tab
+watch(currentTab, (newTab) => {
+    if (newTab === 'modify') {
+        loadCurrentWeapons();
+    }
+});
+
 // Filter weapons based on search query
 const filteredWeapons = computed(() => {
     let weapons = WEAPONS;
