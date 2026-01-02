@@ -45,21 +45,18 @@ messenger.commands.register({
 });
 
 // Handle weapon give request
-alt.onClient(WeaponMenuEvents.toServer.giveWeapon, (player: alt.Player, weaponHash: string, callback?: (success: boolean, error?: string) => void) => {
+alt.onClient(WeaponMenuEvents.toServer.giveWeapon, (player: alt.Player, weaponHash: string) => {
     if (!player || !player.valid) {
-        if (callback) callback(false, 'Invalid player');
         return;
     }
 
     try {
         // Validate weapon hash
         if (!weaponHash || typeof weaponHash !== 'string') {
-            if (callback) callback(false, 'Invalid weapon hash');
             return;
         }
 
         if (!isValidWeaponHash(weaponHash)) {
-            if (callback) callback(false, 'Unknown weapon');
             return;
         }
 
@@ -67,7 +64,6 @@ alt.onClient(WeaponMenuEvents.toServer.giveWeapon, (player: alt.Player, weaponHa
         const character = rPlayer.character.get();
 
         if (!character) {
-            if (callback) callback(false, 'No character selected');
             return;
         }
 
@@ -80,30 +76,24 @@ alt.onClient(WeaponMenuEvents.toServer.giveWeapon, (player: alt.Player, weaponHa
 
         const weaponName = getWeaponName(weaponHash);
         rPlayer.notify.showNotification(`${weaponName} received!`);
-
-        if (callback) callback(true);
     } catch (error) {
         console.error('Error giving weapon:', error);
-        if (callback) callback(false, 'Server error');
     }
 });
 
 // Handle favorite toggle
-alt.onClient(WeaponMenuEvents.toServer.toggleFavorite, async (player: alt.Player, weaponHash: string, callback?: (success: boolean, error?: string) => void) => {
+alt.onClient(WeaponMenuEvents.toServer.toggleFavorite, async (player: alt.Player, weaponHash: string) => {
     if (!player || !player.valid) {
-        if (callback) callback(false, 'Invalid player');
         return;
     }
 
     try {
         // Validate weapon hash
         if (!weaponHash || typeof weaponHash !== 'string') {
-            if (callback) callback(false, 'Invalid weapon hash');
             return;
         }
 
         if (!isValidWeaponHash(weaponHash)) {
-            if (callback) callback(false, 'Unknown weapon');
             return;
         }
 
@@ -111,7 +101,6 @@ alt.onClient(WeaponMenuEvents.toServer.toggleFavorite, async (player: alt.Player
         const data = document.get();
 
         if (!data) {
-            if (callback) callback(false, 'No character data');
             return;
         }
 
@@ -127,7 +116,6 @@ alt.onClient(WeaponMenuEvents.toServer.toggleFavorite, async (player: alt.Player
             if (favorites.length >= 20) {
                 const rPlayer = Rebar.usePlayer(player);
                 rPlayer.notify.showNotification('Maximum 20 favorite weapons allowed');
-                if (callback) callback(false, 'Max favorites reached');
                 return;
             }
             favorites.push(weaponHash);
@@ -137,25 +125,20 @@ alt.onClient(WeaponMenuEvents.toServer.toggleFavorite, async (player: alt.Player
         const success = await document.setBulk({ favoriteWeapons: favorites });
 
         if (!success) {
-            if (callback) callback(false, 'Failed to save favorites');
             return;
         }
 
         // Send updated favorites to webview
         const webview = Rebar.player.useWebview(player);
         webview.emit(WeaponMenuEvents.toWebview.setFavorites, favorites);
-
-        if (callback) callback(true);
     } catch (error) {
         console.error('Error toggling favorite:', error);
-        if (callback) callback(false, 'Server error');
     }
 });
 
 // Handle get favorites request
-alt.onClient(WeaponMenuEvents.toServer.getFavorites, (player: alt.Player, callback?: (favorites: string[] | null) => void) => {
+alt.onClient(WeaponMenuEvents.toServer.getFavorites, (player: alt.Player) => {
     if (!player || !player.valid) {
-        if (callback) callback(null);
         return;
     }
 
@@ -164,17 +147,13 @@ alt.onClient(WeaponMenuEvents.toServer.getFavorites, (player: alt.Player, callba
         const data = document.get();
 
         if (!data) {
-            if (callback) callback(null);
             return;
         }
 
         const favorites: string[] = (data.favoriteWeapons as string[]) || [];
         const webview = Rebar.player.useWebview(player);
         webview.emit(WeaponMenuEvents.toWebview.setFavorites, favorites);
-
-        if (callback) callback(favorites);
     } catch (error) {
         console.error('Error getting favorites:', error);
-        if (callback) callback(null);
     }
 });

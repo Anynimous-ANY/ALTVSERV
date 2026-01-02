@@ -6,6 +6,7 @@ import { WEAPONS } from '../shared/weapons.js';
 
 const Rebar = useRebarClient();
 const webview = Rebar.webview.useWebview();
+const controls = Rebar.player.useControls();
 
 // Validate weapon hash
 function isValidWeaponHash(hash: string): boolean {
@@ -22,7 +23,7 @@ alt.on('keyup', (key: number) => {
             return;
         }
 
-        if (!webview.isPageOpen('WeaponMenu')) {
+        if (!webview.isAnyPageOpen()) {
             return;
         }
 
@@ -35,6 +36,8 @@ alt.on('keyup', (key: number) => {
             webview.hide('WeaponMenu');
             webview.unfocus();
             alt.toggleGameControls(true);
+            controls.setCameraControlsDisabled(false);
+            controls.setAttackControlsDisabled(false);
         }
     } catch (error) {
         console.error('Error handling keyup:', error);
@@ -49,11 +52,7 @@ webview.on(WeaponMenuEvents.toServer.giveWeapon, (weaponHash: string) => {
             return;
         }
 
-        alt.emitServer(WeaponMenuEvents.toServer.giveWeapon, weaponHash, (success: boolean, error?: string) => {
-            if (!success) {
-                console.error('Failed to give weapon:', error);
-            }
-        });
+        alt.emitServer(WeaponMenuEvents.toServer.giveWeapon, weaponHash);
     } catch (error) {
         console.error('Error requesting weapon:', error);
     }
@@ -67,11 +66,7 @@ webview.on(WeaponMenuEvents.toServer.toggleFavorite, (weaponHash: string) => {
             return;
         }
 
-        alt.emitServer(WeaponMenuEvents.toServer.toggleFavorite, weaponHash, (success: boolean, error?: string) => {
-            if (!success) {
-                console.error('Failed to toggle favorite:', error);
-            }
-        });
+        alt.emitServer(WeaponMenuEvents.toServer.toggleFavorite, weaponHash);
     } catch (error) {
         console.error('Error toggling favorite:', error);
     }
@@ -80,11 +75,7 @@ webview.on(WeaponMenuEvents.toServer.toggleFavorite, (weaponHash: string) => {
 // Handle get favorites from webview
 webview.on(WeaponMenuEvents.toServer.getFavorites, () => {
     try {
-        alt.emitServer(WeaponMenuEvents.toServer.getFavorites, (favorites: string[] | null) => {
-            if (!favorites) {
-                console.error('Failed to get favorites');
-            }
-        });
+        alt.emitServer(WeaponMenuEvents.toServer.getFavorites);
     } catch (error) {
         console.error('Error getting favorites:', error);
     }
@@ -100,6 +91,8 @@ webview.on('weaponmenu:client:requestClose', () => {
         webview.hide('WeaponMenu');
         webview.unfocus();
         alt.toggleGameControls(true);
+        controls.setCameraControlsDisabled(false);
+        controls.setAttackControlsDisabled(false);
     } catch (error) {
         console.error('Error closing menu:', error);
     }
@@ -118,6 +111,11 @@ alt.on('rebar:pageShow', (pageName: string) => {
 
         webview.focus();
         alt.toggleGameControls(false);
+        
+        // Disable camera movement and attack controls
+        controls.setCameraControlsDisabled(true);
+        controls.setAttackControlsDisabled(true);
+        
         webview.emit(WeaponMenuEvents.toWebview.open);
     } catch (error) {
         console.error('Error showing weapon menu:', error);
@@ -137,6 +135,8 @@ alt.on('rebar:pageHide', (pageName: string) => {
 
         webview.unfocus();
         alt.toggleGameControls(true);
+        controls.setCameraControlsDisabled(false);
+        controls.setAttackControlsDisabled(false);
         webview.emit(WeaponMenuEvents.toWebview.close);
     } catch (error) {
         console.error('Error hiding weapon menu:', error);
