@@ -90,6 +90,21 @@ webview.on(WeaponMenuEvents.toServer.getFavorites, () => {
     }
 });
 
+// Handle close request from webview
+webview.on('weaponmenu:client:requestClose', () => {
+    try {
+        if (!webview) {
+            return;
+        }
+
+        webview.hide('WeaponMenu');
+        webview.unfocus();
+        alt.toggleGameControls(true);
+    } catch (error) {
+        console.error('Error closing menu:', error);
+    }
+});
+
 // When the webview is shown, focus it and disable game controls
 alt.on('rebar:pageShow', (pageName: string) => {
     try {

@@ -153,7 +153,7 @@ function useApi() {
             let favorites: string[] = (data.favoriteWeapons as string[]) || [];
             const index = favorites.indexOf(weaponHash);
 
-            if (index <= -1) {
+            if (index === -1) {
                 return true; // Not in favorites
             }
 

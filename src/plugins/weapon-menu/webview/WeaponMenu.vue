@@ -125,8 +125,8 @@ function closeMenu() {
         debouncedSearchQuery.value = '';
         error.value = null;
 
-        // Close the page
-        events.emitClient('rebar:closePage', 'WeaponMenu');
+        // Emit to client to hide the page
+        events.emitClient('weaponmenu:client:requestClose');
     } catch (err) {
         console.error('Error closing menu:', err);
     }
@@ -174,12 +174,8 @@ onUnmounted(() => {
             clearTimeout(searchDebounceTimer);
         }
 
-        // Clean up event listeners
-        if (events) {
-            events.off(WeaponMenuEvents.toWebview.setFavorites, setFavorites);
-            events.off(WeaponMenuEvents.toWebview.open, handleOpen);
-            events.off(WeaponMenuEvents.toWebview.close, handleClose);
-        }
+        // Note: useEvents composable doesn't provide an 'off' method
+        // Event handlers will be automatically cleaned up when the component is destroyed
     } catch (err) {
         console.error('Error in onUnmounted:', err);
     }
