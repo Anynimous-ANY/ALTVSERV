@@ -51,7 +51,7 @@ alt.on('keyup', (key: number) => {
         }
 
         if (key === WeaponMenuConfig.keybinds.close) {
-            webview.hide('WeaponMenu');
+            webview.hide("WeaponMenu");
         }
     } catch (error) {
         console.error('Error handling keyup:', error);

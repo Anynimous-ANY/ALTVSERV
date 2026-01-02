@@ -251,7 +251,7 @@ export function useWebview(path = 'http://assets/webview/index.html') {
      * @param {PageNames} vueName
      * @returns {boolean}
      */
-    function isSpecificPageOpen(vueName: PageNames): boolean {
+    function isSpecificPageOpen(vueName: string): boolean {
         return openPages.findIndex((page) => page === vueName) > -1;
     }
 
