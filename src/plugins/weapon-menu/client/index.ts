@@ -44,6 +44,36 @@ alt.everyTick(() => {
     native.disableControlAction(0, 15, true); // Weapon Wheel Down
     native.disableControlAction(0, 16, true); // Weapon Wheel Left
     native.disableControlAction(0, 17, true); // Weapon Wheel Right
+
+    // Disable menu controls (map, pause menu, etc.)
+    native.disableControlAction(0, 199, true); // Pause Menu (P)
+    native.disableControlAction(0, 200, true); // Pause Menu Alternate
+
+    // Disable phone and interaction menu
+    native.disableControlAction(0, 27, true); // Phone
+    native.disableControlAction(0, 243, true); // Interaction Menu (M)
+
+    // Disable radio wheel
+    native.disableControlAction(0, 85, true); // Radio Wheel
+
+    // Disable vehicle controls (in case player is in vehicle)
+    native.disableControlAction(0, 71, true); // Accelerate
+    native.disableControlAction(0, 72, true); // Brake/Reverse
+    native.disableControlAction(0, 59, true); // Steering Left
+    native.disableControlAction(0, 60, true); // Steering Right
+    native.disableControlAction(0, 85, true); // Radio Wheel
+    native.disableControlAction(0, 86, true); // Horn
+
+    // Disable enter/exit vehicle
+    native.disableControlAction(0, 23, true); // Enter Vehicle
+
+    // Disable jump, sprint, crouch
+    native.disableControlAction(0, 22, true); // Jump
+    native.disableControlAction(0, 21, true); // Sprint
+    native.disableControlAction(0, 36, true); // Crouch
+
+    // Disable character switch
+    native.disableControlAction(0, 19, true); // Character Switch (Alt)
 });
 
 // Handle key press for closing the menu
