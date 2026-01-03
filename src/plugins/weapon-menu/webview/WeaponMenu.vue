@@ -155,13 +155,13 @@ function getWeaponImage(weapon: Weapon | any): string {
     }
     
     // Generate image name from hash if available
-    if (weapon?.hash) {
-        const hashWithoutPrefix = weapon.hash.replace('weapon_', '');
+    if (weapon?.hash && typeof weapon.hash === 'string') {
+        const hashWithoutPrefix = weapon.hash.replace('weapon_', '').replace('gadget_', '');
         return `/images/weapons/${hashWithoutPrefix}.png`;
     }
     
     // Fallback to default placeholder
-    return '/images/weapons/default.png';
+    return '/images/weapons/placeholder.svg';
 }
 
 // Fallback to placeholder if image fails to load

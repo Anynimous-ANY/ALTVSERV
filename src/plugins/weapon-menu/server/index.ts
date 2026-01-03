@@ -230,8 +230,9 @@ alt.onClient(WeaponMenuEvents.toServer.getCurrentWeapons, (player: alt.Player) =
                     console.log('[WeaponMenu] Found weapon:', weaponDef.name, 'tint:', weapon.tintIndex, 'ammo:', ammo);
                     
                     allWeapons.push({
-                        hash: weapon.hash,
+                        hash: weaponDef.hash, // Use string hash from weaponDef, not numeric hash from player.weapons
                         name: weaponDef.name,
+                        image: weaponDef.image, // Include image property
                         ammo: ammo,
                         tintIndex: weapon.tintIndex,
                         components: weapon.components || [],

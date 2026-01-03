@@ -44,7 +44,7 @@ alt.on('keyup', (key: number) => {
         }
         
         // Check if bank menu is open
-        if (!webview.isPageOpen('BankMenu')) {
+        if (!webview.isSpecificPageOpen('BankMenu')) {
             return;
         }
         
