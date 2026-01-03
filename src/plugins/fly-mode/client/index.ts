@@ -102,9 +102,9 @@ function flyModeTick() {
         // Freeze player to prevent falling (only if not in vehicle)
         native.freezeEntityPosition(player.scriptID, true);
         
-        // Set Superman flying animation
-        const animDict = 'move_strafe@stealth';
-        const animName = 'idle';
+        // Set meditation animation
+        const animDict = 'rcmcollect_paperleadinout@';
+        const animName = 'meditiate_idle';
         
         // Force the animation every frame to ensure it stays active
         if (!native.isEntityPlayingAnim(player.scriptID, animDict, animName, 3)) {
@@ -225,7 +225,7 @@ function enableFlyMode() {
         flyInterval = alt.everyTick(flyModeTick);
     }
     
-    console.log('[Fly Mode] Enabled - Speed:', flySpeed, 'In Vehicle:', vehicle !== null);
+    console.log('[Fly Mode] Enabled - Speed:', flySpeed, 'In Vehicle:', vehicle !== null, 'Animation: meditation');
 }
 
 /**
