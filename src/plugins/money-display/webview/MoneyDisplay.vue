@@ -20,7 +20,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="fixed bottom-80 left-6 z-[999999] pointer-events-none">
+    <div class="fixed bottom-60 left-8 z-[999999] pointer-events-none">
         <div class="flex items-center gap-3 rounded-lg bg-black bg-opacity-60 px-4 py-3 backdrop-blur-sm">
             <div class="flex items-center justify-center rounded-full bg-green-600 p-2">
                 <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
