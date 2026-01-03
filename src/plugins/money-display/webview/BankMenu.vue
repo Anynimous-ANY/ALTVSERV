@@ -24,18 +24,25 @@ function showMessage(msg: string, type: 'success' | 'error') {
     }, 3000);
 }
 
-function handleDeposit() {
+function validateAmount(): boolean {
     if (isProcessing.value || !amount.value || amount.value <= 0) {
         showMessage('Veuillez entrer un montant valide', 'error');
+        return false;
+    }
+    return true;
+}
+
+function handleDeposit() {
+    if (!validateAmount()) {
         return;
     }
 
-    if (amount.value > money.value) {
+    if (amount.value! > money.value) {
         showMessage('Vous n\'avez pas assez d\'argent', 'error');
         return;
     }
 
-    const depositAmount = amount.value;
+    const depositAmount = amount.value!;
     isProcessing.value = true;
     events.emitServer(MoneyEvents.toServer.deposit, depositAmount, (success: boolean) => {
         isProcessing.value = false;
@@ -49,12 +56,11 @@ function handleDeposit() {
 }
 
 function handleWithdraw() {
-    if (isProcessing.value || !amount.value || amount.value <= 0) {
-        showMessage('Veuillez entrer un montant valide', 'error');
+    if (!validateAmount()) {
         return;
     }
 
-    const withdrawAmount = amount.value;
+    const withdrawAmount = amount.value!;
     isProcessing.value = true;
     events.emitServer(MoneyEvents.toServer.withdraw, withdrawAmount, (success: boolean) => {
         isProcessing.value = false;
