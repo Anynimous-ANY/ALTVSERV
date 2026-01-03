@@ -21,6 +21,19 @@ const KEY_SPACE = 32;
 const KEY_SHIFT = 16;
 const KEY_F10 = 121;
 
+// Mouse wheel control IDs
+const CONTROL_WEAPON_WHEEL_NEXT = 14; // Scroll up
+const CONTROL_WEAPON_WHEEL_PREV = 15; // Scroll down
+const CONTROL_SCROLL_UP_ALTERNATE = 241; // Alternative scroll up
+const CONTROL_SCROLL_DOWN_ALTERNATE = 242; // Alternative scroll down
+
+/**
+ * Round fly speed to 1 decimal place
+ */
+function roundSpeed(speed: number): number {
+    return Math.round(speed * 10) / 10;
+}
+
 /**
  * Main fly mode tick function
  * Handles player movement in fly mode
@@ -32,9 +45,6 @@ function flyModeTick() {
 
     const player = alt.Player.local;
     
-    // Disable collision for smooth movement
-    native.setEntityCollision(player.scriptID, false, false);
-    
     // Freeze player to prevent falling
     native.freezeEntityPosition(player.scriptID, true);
     
@@ -42,10 +52,16 @@ function flyModeTick() {
     native.setEntityAlpha(player.scriptID, 0, false);
     
     // Handle mouse wheel for speed control
-    if (native.isControlJustPressed(0, 14) || native.isControlJustPressed(0, 241)) {
+    if (
+        native.isControlJustPressed(0, CONTROL_WEAPON_WHEEL_NEXT) ||
+        native.isControlJustPressed(0, CONTROL_SCROLL_UP_ALTERNATE)
+    ) {
         increaseFlySpeed();
     }
-    if (native.isControlJustPressed(0, 15) || native.isControlJustPressed(0, 242)) {
+    if (
+        native.isControlJustPressed(0, CONTROL_WEAPON_WHEEL_PREV) ||
+        native.isControlJustPressed(0, CONTROL_SCROLL_DOWN_ALTERNATE)
+    ) {
         decreaseFlySpeed();
     }
     
@@ -186,7 +202,7 @@ function handleSetFlyMode(enabled: boolean) {
  */
 function increaseFlySpeed() {
     flySpeed = Math.min(flySpeed + SPEED_INCREMENT, MAX_SPEED);
-    flySpeed = Math.round(flySpeed * 10) / 10; // Round to 1 decimal
+    flySpeed = roundSpeed(flySpeed);
     
     console.log('[Fly Mode] Speed increased to:', flySpeed);
     
@@ -199,7 +215,7 @@ function increaseFlySpeed() {
  */
 function decreaseFlySpeed() {
     flySpeed = Math.max(flySpeed - SPEED_INCREMENT, MIN_SPEED);
-    flySpeed = Math.round(flySpeed * 10) / 10; // Round to 1 decimal
+    flySpeed = roundSpeed(flySpeed);
     
     console.log('[Fly Mode] Speed decreased to:', flySpeed);
     
