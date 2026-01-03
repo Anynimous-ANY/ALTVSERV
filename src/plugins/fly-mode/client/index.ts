@@ -46,9 +46,14 @@ function flyModeTick() {
     // Disable collision for smooth movement
     native.setEntityCollision(player.scriptID, false, false);
     
+    // Freeze player to prevent falling
+    native.freezeEntityPosition(player.scriptID, true);
+    
+    // Keep player invisible to prevent animation issues
+    native.setEntityAlpha(player.scriptID, 0, false);
+    
     // Get camera direction
     const camRot = native.getGameplayCamRot(2);
-    const camPos = native.getGameplayCamCoord();
     
     // Calculate forward direction from camera
     const rotZ = (camRot.z * Math.PI) / 180;
@@ -76,18 +81,25 @@ function flyModeTick() {
     const currentSpeed = baseSpeed * flySpeed;
     
     // Forward/Backward movement (W/S)
-    if (native.isDisabledControlPressed(0, CONTROL_MOVE_UD)) {
-        const moveValue = native.getDisabledControlNormal(0, CONTROL_MOVE_UD);
-        newPos.x -= forward.x * moveValue * currentSpeed;
-        newPos.y -= forward.y * moveValue * currentSpeed;
-        newPos.z -= forward.z * moveValue * currentSpeed;
+    if (alt.isKeyDown(KEY_W)) {
+        newPos.x += forward.x * currentSpeed;
+        newPos.y += forward.y * currentSpeed;
+        newPos.z += forward.z * currentSpeed;
+    }
+    if (alt.isKeyDown(KEY_S)) {
+        newPos.x -= forward.x * currentSpeed;
+        newPos.y -= forward.y * currentSpeed;
+        newPos.z -= forward.z * currentSpeed;
     }
     
     // Left/Right movement (A/D)
-    if (native.isDisabledControlPressed(0, CONTROL_MOVE_LR)) {
-        const moveValue = native.getDisabledControlNormal(0, CONTROL_MOVE_LR);
-        newPos.x += right.x * moveValue * currentSpeed;
-        newPos.y += right.y * moveValue * currentSpeed;
+    if (alt.isKeyDown(KEY_A)) {
+        newPos.x -= right.x * currentSpeed;
+        newPos.y -= right.y * currentSpeed;
+    }
+    if (alt.isKeyDown(KEY_D)) {
+        newPos.x += right.x * currentSpeed;
+        newPos.y += right.y * currentSpeed;
     }
     
     // Up movement (Space)
@@ -102,12 +114,6 @@ function flyModeTick() {
     
     // Apply new position
     native.setEntityCoordsNoOffset(player.scriptID, newPos.x, newPos.y, newPos.z, false, false, false);
-    
-    // Freeze player to prevent falling
-    native.freezeEntityPosition(player.scriptID, true);
-    
-    // Keep player invisible to prevent animation issues
-    native.setEntityAlpha(player.scriptID, 0, false);
 }
 
 /**
@@ -187,8 +193,8 @@ function increaseFlySpeed() {
     
     console.log('[Fly Mode] Speed increased to:', flySpeed);
     
-    // Show notification
-    alt.emit('rebar:showNotification', `Fly speed: ${flySpeed.toFixed(1)}x`);
+    // Notify server about speed change
+    alt.emitServer(FlyModeEvents.toServer.updateSpeed, flySpeed);
 }
 
 /**
@@ -200,8 +206,8 @@ function decreaseFlySpeed() {
     
     console.log('[Fly Mode] Speed decreased to:', flySpeed);
     
-    // Show notification
-    alt.emit('rebar:showNotification', `Fly speed: ${flySpeed.toFixed(1)}x`);
+    // Notify server about speed change
+    alt.emitServer(FlyModeEvents.toServer.updateSpeed, flySpeed);
 }
 
 /**
@@ -222,13 +228,13 @@ alt.everyTick(() => {
         return;
     }
     
-    // Scroll up - increase speed
-    if (native.isDisabledControlJustPressed(0, CONTROL_SCROLL_UP)) {
+    // Scroll up - increase speed (Control 14 or 241)
+    if (native.isControlJustPressed(0, 14) || native.isControlJustPressed(0, 241)) {
         increaseFlySpeed();
     }
     
-    // Scroll down - decrease speed
-    if (native.isDisabledControlJustPressed(0, CONTROL_SCROLL_DOWN)) {
+    // Scroll down - decrease speed (Control 15 or 242)
+    if (native.isControlJustPressed(0, 15) || native.isControlJustPressed(0, 242)) {
         decreaseFlySpeed();
     }
 });

@@ -70,6 +70,20 @@ alt.onClient(FlyModeEvents.toServer.toggleFly, (player: alt.Player) => {
     }
 });
 
+// Handle speed update from client
+alt.onClient(FlyModeEvents.toServer.updateSpeed, (player: alt.Player, speed: number) => {
+    if (!player || !player.valid) {
+        return;
+    }
+
+    try {
+        const rPlayer = Rebar.usePlayer(player);
+        rPlayer.notify.showNotification(`Fly speed: ${speed.toFixed(1)}x`);
+    } catch (error) {
+        console.error('[Fly Mode] Error updating speed:', error);
+    }
+});
+
 // Clean up when player disconnects
 alt.on('playerDisconnect', (player: alt.Player) => {
     flyModeStates.delete(player.id);
