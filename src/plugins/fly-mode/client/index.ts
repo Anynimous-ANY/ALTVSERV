@@ -77,16 +77,17 @@ function flyModeTick() {
     // Handle mouse wheel for speed control
     const now = Date.now();
     if (now - lastSpeedChange > SPEED_CHANGE_DEBOUNCE_MS) {
-        if (
-            native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_NEXT) ||
-            native.isDisabledControlJustPressed(0, CONTROL_SCROLL_UP_ALTERNATE)
-        ) {
+        const scrollUp = native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_NEXT) || 
+                        native.isDisabledControlJustPressed(0, CONTROL_SCROLL_UP_ALTERNATE);
+        const scrollDown = native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_PREV) || 
+                          native.isDisabledControlJustPressed(0, CONTROL_SCROLL_DOWN_ALTERNATE);
+        
+        if (scrollUp) {
+            console.log('[Fly Mode] Mouse wheel UP detected (controls: 14 or 241)');
             lastSpeedChange = now;
             increaseFlySpeed();
-        } else if (
-            native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_PREV) ||
-            native.isDisabledControlJustPressed(0, CONTROL_SCROLL_DOWN_ALTERNATE)
-        ) {
+        } else if (scrollDown) {
+            console.log('[Fly Mode] Mouse wheel DOWN detected (controls: 15 or 242)');
             lastSpeedChange = now;
             decreaseFlySpeed();
         }
