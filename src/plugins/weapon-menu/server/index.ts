@@ -455,24 +455,21 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
         // Send updated weapons list
         const allWeapons: any[] = [];
         for (const weapon of player.weapons) {
-            // Find the weapon definition to get the name
-            let weaponName = `Weapon ${weapon.hash}`;
-            for (const weaponDef of WEAPONS) {
-                const wHash = alt.hash(weaponDef.hash);
-                if (wHash === weapon.hash) {
-                    weaponName = weaponDef.name;
-                    break;
-                }
+            // Find the weapon definition
+            const weaponDef = WEAPONS.find(w => alt.hash(w.hash) === weapon.hash);
+            
+            if (weaponDef) {
+                const ammo = player.getWeaponAmmo(weapon.hash);
+                
+                allWeapons.push({
+                    hash: weaponDef.hash, // Use string hash from weaponDef
+                    name: weaponDef.name,
+                    image: weaponDef.image, // Include image property
+                    ammo: ammo,
+                    tintIndex: weapon.tintIndex,
+                    components: weapon.components || [],
+                });
             }
-
-            allWeapons.push({
-                        hash: weaponDef.hash, // Use string hash from weaponDef
-                        name: weaponDef.name,
-                        image: weaponDef.image, // Include image property
-                        ammo: ammo,
-                        tintIndex: weapon.tintIndex,
-                        components: weapon.components || [],
-                    });
         }
 
         const webview = Rebar.player.useWebview(player);
