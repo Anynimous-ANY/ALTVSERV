@@ -17,8 +17,14 @@ const selectedModifyWeapon = ref<any | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 
-// Footer help text
-const footerText = 'ESC to close | You can walk/drive while menu is open | Click weapon to buy | ⭐ to favorite';
+// Footer help text items
+const footerItems = [
+    'ESC to close',
+    'You can walk/drive while menu is open',
+    'Click weapon to buy',
+    '⭐ to favorite'
+];
+const footerText = footerItems.join(' | ');
 
 let searchDebounceTimer: number | null = null;
 
@@ -135,7 +141,7 @@ function isFavorite(weapon: Weapon): boolean {
 
 // Get weapon image path
 function getWeaponImage(weapon: Weapon | any): string {
-    const imageName = weapon.image || (weapon.hash?.replace('weapon_', '') + '.png') || 'default.png';
+    const imageName = weapon.image || `${weapon.hash?.replace('weapon_', '') || 'default'}.png`;
     return `/images/weapons/${imageName}`;
 }
 

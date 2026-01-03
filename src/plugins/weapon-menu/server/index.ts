@@ -75,6 +75,7 @@ alt.onClient(WeaponMenuEvents.toServer.giveWeapon, (player: alt.Player, weaponHa
 
         const ammo = weaponData.ammo ?? 999;
         const price = weaponData.price ?? 0;
+        const weaponName = getWeaponName(weaponHash);
 
         // Check if weapon costs money
         if (price > 0) {
@@ -96,25 +97,21 @@ alt.onClient(WeaponMenuEvents.toServer.giveWeapon, (player: alt.Player, weaponHa
             moneyApi.removePlayerMoney(player, price)
                 .then((success: boolean) => {
                     if (!success) {
-                        rPlayer.notify.showNotification('Failed to process payment');
+                        rPlayer.notify.showNotification(`Failed to process payment for ${weaponName} (${price}€)`);
                         return;
                     }
 
                     // Give weapon to player with appropriate ammo
                     player.giveWeapon(alt.hash(weaponHash), ammo, true);
-
-                    const weaponName = getWeaponName(weaponHash);
                     rPlayer.notify.showNotification(`${weaponName} purchased for ${price}€!`);
                 })
                 .catch((error: any) => {
                     console.error('Error processing payment:', error);
-                    rPlayer.notify.showNotification('Payment failed');
+                    rPlayer.notify.showNotification('Payment processing failed. Please try again or contact support if the issue persists.');
                 });
         } else {
             // Free weapon
             player.giveWeapon(alt.hash(weaponHash), ammo, true);
-
-            const weaponName = getWeaponName(weaponHash);
             rPlayer.notify.showNotification(`${weaponName} received!`);
         }
     } catch (error) {
