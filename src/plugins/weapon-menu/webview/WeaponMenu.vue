@@ -26,6 +26,9 @@ const footerItems = [
 ];
 const footerText = footerItems.join(' | ');
 
+// Constants
+const WEAPON_REFRESH_DELAY = 300; // ms - delay to allow server processing before refresh
+
 let searchDebounceTimer: number | null = null;
 
 // Debounce search query
@@ -334,13 +337,14 @@ function isComponentAttached(componentHash: number): boolean {
     return selectedModifyWeapon.value.components.includes(componentHash);
 }
 
-// Handle weapon given event - refresh current weapons if on modify tab
-function handleWeaponGiven(weaponHash: string) {
+// Handle weapon given event - refresh current weapons list
+function handleWeaponGiven() {
     try {
         // Refresh current weapons list after weapon is given
+        // Delay allows server to process the weapon addition
         setTimeout(() => {
             loadCurrentWeapons();
-        }, 300);
+        }, WEAPON_REFRESH_DELAY);
     } catch (err) {
         console.error('Error handling weapon given:', err);
     }
