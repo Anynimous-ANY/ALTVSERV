@@ -102,24 +102,23 @@ function flyModeTick() {
         // Freeze player to prevent falling (only if not in vehicle)
         native.freezeEntityPosition(player.scriptID, true);
         
-        // Set mechanic animation - player working under vehicle pose (upside down)
-        const animDict = 'amb@world_human_vehicle_mechanic@male@base';
-        const animName = 'base';
+        // Set falling skydive animation for upside-down flying effect
+        const animDict = 'skydive@base';
+        const animName = 'free_idle';
         
-        // Force the animation every frame to ensure it stays active
-        if (!native.isEntityPlayingAnim(player.scriptID, animDict, animName, 3)) {
-            if (!native.hasAnimDictLoaded(animDict)) {
-                native.requestAnimDict(animDict);
-            } else {
-                // Play animation with flags that keep it active
-                // Flag 1 = repeat, no interruption
-                native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, -8.0, -1, 1, 0, false, false, false);
-            }
+        // Request and load animation dictionary first
+        if (!native.hasAnimDictLoaded(animDict)) {
+            native.requestAnimDict(animDict);
+            // Wait for animation to load before playing
+        } else if (!native.isEntityPlayingAnim(player.scriptID, animDict, animName, 3)) {
+            // Play animation with proper flags for continuous play
+            // Flag 1 = repeat continuously
+            native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, -8.0, -1, 1, 0, false, false, false);
         }
         
-        // Set player rotation to be upside down (180 degrees on X axis)
-        const currentRot = native.getEntityRotation(player.scriptID, 2);
-        native.setEntityRotation(player.scriptID, 180.0, currentRot.y, currentRot.z, 2, true);
+        // Set player rotation to be upside down (180 degrees on pitch)
+        const camRot = native.getGameplayCamRot(2);
+        native.setEntityRotation(player.scriptID, 180.0, 0.0, camRot.z, 2, true);
     } else {
         // Freeze vehicle when flying
         native.freezeEntityPosition(vehicle.scriptID, true);
@@ -229,7 +228,7 @@ function enableFlyMode() {
         flyInterval = alt.everyTick(flyModeTick);
     }
     
-    console.log('[Fly Mode] Enabled - Speed:', flySpeed, 'In Vehicle:', vehicle !== null, 'Animation: mechanic (upside down)');
+    console.log('[Fly Mode] Enabled - Speed:', flySpeed, 'In Vehicle:', vehicle !== null, 'Animation: skydive (upside down)');
 }
 
 /**
