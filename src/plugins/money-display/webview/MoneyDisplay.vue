@@ -13,6 +13,9 @@ function updateMoney(newMoney: number) {
 
 onMounted(() => {
     events.on(MoneyEvents.toWebview.updateMoney, updateMoney);
+    
+    // Request current money when component mounts to get the real value
+    events.emitServer(MoneyEvents.toServer.requestMoney);
 });
 </script>
 
