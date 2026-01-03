@@ -106,16 +106,25 @@ function flyModeTick() {
         const animDict = 'rcmcollect_paperleadinout@';
         const animName = 'meditiate_idle';
         
-        // Force the animation every frame to ensure it stays active
-        if (!native.isEntityPlayingAnim(player.scriptID, animDict, animName, 3)) {
-            if (!native.hasAnimDictLoaded(animDict)) {
-                native.requestAnimDict(animDict);
-            } else {
-                // Play animation with flags that keep it active
-                // Flag 1 (repeat) + Flag 2 (stop on last frame) + Flag 32 (upperbody only) = 35
-                native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, -8.0, -1, 35, 0, false, false, false);
+        // Request animation dictionary if not loaded
+        if (!native.hasAnimDictLoaded(animDict)) {
+            native.requestAnimDict(animDict);
+        }
+        
+        // Play animation once dictionary is loaded
+        if (native.hasAnimDictLoaded(animDict)) {
+            if (!native.isEntityPlayingAnim(player.scriptID, animDict, animName, 3)) {
+                // Clear any existing tasks first
+                native.clearPedTasks(player.scriptID);
+                // Play animation with proper flags
+                // Flag 1 (repeat) + Flag 2 (stop on last frame) = 3
+                native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, -8.0, -1, 3, 0, false, false, false);
             }
         }
+        
+        // Set player heading to match camera rotation
+        const camRot = native.getGameplayCamRot(2);
+        native.setEntityHeading(player.scriptID, camRot.z);
     } else {
         // Freeze vehicle when flying
         native.freezeEntityPosition(vehicle.scriptID, true);
