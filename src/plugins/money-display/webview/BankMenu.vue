@@ -32,7 +32,7 @@ function validateAmount(): boolean {
     return true;
 }
 
-function handleDeposit() {
+async function handleDeposit() {
     if (!validateAmount()) {
         return;
     }
@@ -44,33 +44,45 @@ function handleDeposit() {
 
     const depositAmount = amount.value!;
     isProcessing.value = true;
-    events.emitServer(MoneyEvents.toServer.deposit, depositAmount, (success: boolean) => {
+    
+    try {
+        const success = await events.emitServerRpc<boolean>(MoneyEvents.toServer.deposit, depositAmount);
         isProcessing.value = false;
+        
         if (success) {
             showMessage(`Dépôt de ${formatMoney(depositAmount)} effectué avec succès`, 'success');
             amount.value = null;
         } else {
             showMessage('Erreur lors du dépôt', 'error');
         }
-    });
+    } catch (error) {
+        isProcessing.value = false;
+        showMessage('Erreur lors du dépôt', 'error');
+    }
 }
 
-function handleWithdraw() {
+async function handleWithdraw() {
     if (!validateAmount()) {
         return;
     }
 
     const withdrawAmount = amount.value!;
     isProcessing.value = true;
-    events.emitServer(MoneyEvents.toServer.withdraw, withdrawAmount, (success: boolean) => {
+    
+    try {
+        const success = await events.emitServerRpc<boolean>(MoneyEvents.toServer.withdraw, withdrawAmount);
         isProcessing.value = false;
+        
         if (success) {
             showMessage(`Retrait de ${formatMoney(withdrawAmount)} effectué avec succès`, 'success');
             amount.value = null;
         } else {
             showMessage('Vous n\'avez pas assez d\'argent en banque', 'error');
         }
-    });
+    } catch (error) {
+        isProcessing.value = false;
+        showMessage('Vous n\'avez pas assez d\'argent en banque', 'error');
+    }
 }
 
 function handleClose() {

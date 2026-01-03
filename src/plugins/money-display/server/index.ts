@@ -157,27 +157,21 @@ function handleCloseBank(player: alt.Player) {
 }
 
 // Handle deposit
-async function handleDeposit(player: alt.Player, amount: number, callback?: (success: boolean) => void) {
-    if (!callback) {
-        console.error('[Money Display] Callback missing on deposit event');
-        return;
-    }
-    
+async function handleDeposit(player: alt.Player, amount: number): Promise<boolean> {
     if (!player || !player.valid) {
-        callback(false);
-        return;
+        console.warn('[Money Display] Invalid player in handleDeposit');
+        return false;
     }
     
     if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
-        callback(false);
-        return;
+        console.warn('[Money Display] Invalid amount in handleDeposit:', amount);
+        return false;
     }
     
     const currentMoney = getPlayerMoney(player);
     
     if (currentMoney < amount) {
-        callback(false);
-        return;
+        return false;
     }
     
     // TODO: Implement separate bank account system
@@ -189,24 +183,19 @@ async function handleDeposit(player: alt.Player, amount: number, callback?: (suc
         rPlayer.notify.showNotification(`Dépôt de ${amount}€ effectué avec succès`);
     }
     
-    callback(success);
+    return success;
 }
 
 // Handle withdraw
-async function handleWithdraw(player: alt.Player, amount: number, callback?: (success: boolean) => void) {
-    if (!callback) {
-        console.error('[Money Display] Callback missing on withdraw event');
-        return;
-    }
-    
+async function handleWithdraw(player: alt.Player, amount: number): Promise<boolean> {
     if (!player || !player.valid) {
-        callback(false);
-        return;
+        console.warn('[Money Display] Invalid player in handleWithdraw');
+        return false;
     }
     
     if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
-        callback(false);
-        return;
+        console.warn('[Money Display] Invalid amount in handleWithdraw:', amount);
+        return false;
     }
     
     // TODO: Implement bank balance checking
@@ -220,7 +209,7 @@ async function handleWithdraw(player: alt.Player, amount: number, callback?: (su
         rPlayer.notify.showNotification(`Solde bancaire insuffisant`);
     }
     
-    callback(success);
+    return success;
 }
 
 // Register /bank command
