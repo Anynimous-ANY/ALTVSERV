@@ -24,6 +24,15 @@ const KEY_F10 = 121;
 // Mouse wheel control IDs
 const CONTROL_WEAPON_WHEEL_NEXT = 14; // Scroll up
 const CONTROL_WEAPON_WHEEL_PREV = 15; // Scroll down
+const CONTROL_SELECT_NEXT_WEAPON = 16; // Select next weapon
+const CONTROL_SELECT_PREV_WEAPON = 17; // Select prev weapon
+const CONTROL_SELECT_WEAPON = 37; // Select weapon (tab)
+const CONTROL_WEAPON_WHEEL_UP = 157; // Weapon wheel up
+const CONTROL_WEAPON_WHEEL_DOWN = 158; // Weapon wheel down
+const CONTROL_WEAPON_WHEEL_LEFT = 159; // Weapon wheel left
+const CONTROL_WEAPON_WHEEL_RIGHT = 160; // Weapon wheel right
+const CONTROL_WEAPON_WHEEL_261 = 261; // Weapon wheel control
+const CONTROL_WEAPON_WHEEL_262 = 262; // Weapon wheel control
 const CONTROL_SCROLL_UP_ALTERNATE = 241; // Alternative scroll up
 const CONTROL_SCROLL_DOWN_ALTERNATE = 242; // Alternative scroll down
 
@@ -48,18 +57,18 @@ function flyModeTick() {
 
     const player = alt.Player.local;
     
-    // Disable weapon wheel controls when in fly mode - multiple control IDs to ensure it's fully disabled
-    native.disableControlAction(0, 14, true); // Weapon wheel next
-    native.disableControlAction(0, 15, true); // Weapon wheel prev
-    native.disableControlAction(0, 16, true); // Select next weapon
-    native.disableControlAction(0, 17, true); // Select prev weapon
-    native.disableControlAction(0, 37, true); // Select weapon (tab)
-    native.disableControlAction(0, 157, true); // Weapon wheel up
-    native.disableControlAction(0, 158, true); // Weapon wheel down
-    native.disableControlAction(0, 159, true); // Weapon wheel left
-    native.disableControlAction(0, 160, true); // Weapon wheel right
-    native.disableControlAction(0, 261, true); // Weapon wheel
-    native.disableControlAction(0, 262, true); // Weapon wheel
+    // Disable weapon wheel controls when in fly mode - all control IDs to ensure it's fully disabled
+    native.disableControlAction(0, CONTROL_WEAPON_WHEEL_NEXT, true);
+    native.disableControlAction(0, CONTROL_WEAPON_WHEEL_PREV, true);
+    native.disableControlAction(0, CONTROL_SELECT_NEXT_WEAPON, true);
+    native.disableControlAction(0, CONTROL_SELECT_PREV_WEAPON, true);
+    native.disableControlAction(0, CONTROL_SELECT_WEAPON, true);
+    native.disableControlAction(0, CONTROL_WEAPON_WHEEL_UP, true);
+    native.disableControlAction(0, CONTROL_WEAPON_WHEEL_DOWN, true);
+    native.disableControlAction(0, CONTROL_WEAPON_WHEEL_LEFT, true);
+    native.disableControlAction(0, CONTROL_WEAPON_WHEEL_RIGHT, true);
+    native.disableControlAction(0, CONTROL_WEAPON_WHEEL_261, true);
+    native.disableControlAction(0, CONTROL_WEAPON_WHEEL_262, true);
     
     // Handle mouse wheel for speed control
     if (
@@ -131,7 +140,7 @@ function flyModeTick() {
     const baseSpeed = 1.0; // Reduced from 2.0 for better control
     const currentSpeed = baseSpeed * flySpeed;
     
-    // Check if chat is open - if so, don't process movement keys
+    // Check if chat is open once - reuse this value for all key checks
     const isChatOpen = alt.isMenuOpen() || alt.isConsoleOpen();
     
     // Forward/Backward movement (Z/S for AZERTY)
