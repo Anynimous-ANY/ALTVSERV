@@ -112,8 +112,8 @@ function flyModeTick() {
                 native.requestAnimDict(animDict);
             } else {
                 // Play animation with flags that keep it active
-                // Flag 1 = repeat, no interruption
-                native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, -8.0, -1, 1, 0, false, false, false);
+                // Flag 1 (repeat) + Flag 2 (stop on last frame) + Flag 32 (upperbody only) = 35
+                native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, -8.0, -1, 35, 0, false, false, false);
             }
         }
     } else {
