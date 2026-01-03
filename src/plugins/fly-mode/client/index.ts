@@ -6,11 +6,13 @@ import { FlyModeEvents } from '../shared/events.js';
 let isFlyModeActive = false;
 let flySpeed = 0.5; // Default speed multiplier - medium speed
 let flyInterval: number | null = null;
+let lastF10Press = 0; // Debounce for F10 key
 
 // Speed settings - expanded range for more control
-const MIN_SPEED = 0.05; // Very slow minimum (5 slower speeds from 0.5: 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.05)
-const MAX_SPEED = 5.0; // Maximum speed (5 faster speeds from 0.5: 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0)
+const MIN_SPEED = 0.05; // Very slow minimum
+const MAX_SPEED = 5.0; // Fast maximum
 const SPEED_INCREMENT = 0.1; // Fine increment for precise control
+const F10_DEBOUNCE_MS = 500; // Debounce time for F10 to prevent double triggers
 
 // Control keys (AZERTY layout)
 const KEY_Z = 90; // Forward (was W)
@@ -298,20 +300,28 @@ function decreaseFlySpeed() {
 
 /**
  * Handle key press for F10 toggle
- * Using both keydown and checking via everyTick for F10
+ * Using interval check with debounce to prevent double triggers
  */
-alt.everyTick(() => {
-    // Check F10 using native controls (key 57 is F10 in GTA controls)
+const f10CheckInterval = alt.setInterval(() => {
+    // Check F10 using native controls (control 57 is F10 in GTA)
     if (native.isDisabledControlJustPressed(0, 57)) {
-        alt.emitServer(FlyModeEvents.toServer.toggleFly);
+        const now = Date.now();
+        if (now - lastF10Press > F10_DEBOUNCE_MS) {
+            lastF10Press = now;
+            alt.emitServer(FlyModeEvents.toServer.toggleFly);
+        }
     }
-});
+}, 50); // Check every 50ms for reasonable responsiveness
 
-// Backup F10 handler using keydown
+// Backup F10 handler using keydown with debounce
 alt.on('keydown', (key: number) => {
     // F10 key - Toggle fly mode (keycode 121)
     if (key === KEY_F10) {
-        alt.emitServer(FlyModeEvents.toServer.toggleFly);
+        const now = Date.now();
+        if (now - lastF10Press > F10_DEBOUNCE_MS) {
+            lastF10Press = now;
+            alt.emitServer(FlyModeEvents.toServer.toggleFly);
+        }
     }
 });
 
