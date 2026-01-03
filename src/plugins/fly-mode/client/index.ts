@@ -7,12 +7,14 @@ let isFlyModeActive = false;
 let flySpeed = 0.5; // Default speed multiplier - medium speed
 let flyInterval: number | null = null;
 let lastF10Press = 0; // Debounce for F10 key
+let lastSpeedChange = 0; // Debounce for speed changes
 
 // Speed settings - expanded range for more control
 const MIN_SPEED = 0.05; // Very slow minimum
 const MAX_SPEED = 5.0; // Fast maximum
 const SPEED_INCREMENT = 0.1; // Fine increment for precise control
 const F10_DEBOUNCE_MS = 500; // Debounce time for F10 to prevent double triggers
+const SPEED_CHANGE_DEBOUNCE_MS = 150; // Debounce time for speed changes
 
 // Control keys (AZERTY layout)
 const KEY_Z = 90; // Forward (was W)
@@ -73,17 +75,21 @@ function flyModeTick() {
     native.disableControlAction(0, CONTROL_WEAPON_WHEEL_262, true);
     
     // Handle mouse wheel for speed control
-    if (
-        native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_NEXT) ||
-        native.isDisabledControlJustPressed(0, CONTROL_SCROLL_UP_ALTERNATE)
-    ) {
-        increaseFlySpeed();
-    }
-    if (
-        native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_PREV) ||
-        native.isDisabledControlJustPressed(0, CONTROL_SCROLL_DOWN_ALTERNATE)
-    ) {
-        decreaseFlySpeed();
+    const now = Date.now();
+    if (now - lastSpeedChange > SPEED_CHANGE_DEBOUNCE_MS) {
+        if (
+            native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_NEXT) ||
+            native.isDisabledControlJustPressed(0, CONTROL_SCROLL_UP_ALTERNATE)
+        ) {
+            lastSpeedChange = now;
+            increaseFlySpeed();
+        } else if (
+            native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_PREV) ||
+            native.isDisabledControlJustPressed(0, CONTROL_SCROLL_DOWN_ALTERNATE)
+        ) {
+            lastSpeedChange = now;
+            decreaseFlySpeed();
+        }
     }
     
     // Check if player is in a vehicle
@@ -274,10 +280,11 @@ function handleSetFlyMode(enabled: boolean) {
  * Increase fly speed
  */
 function increaseFlySpeed() {
+    const oldSpeed = flySpeed;
     flySpeed = Math.min(flySpeed + SPEED_INCREMENT, MAX_SPEED);
     flySpeed = roundSpeed(flySpeed);
     
-    console.log('[Fly Mode] Speed increased to:', flySpeed);
+    console.log(`[Fly Mode] Speed increased from ${oldSpeed.toFixed(1)}x to ${flySpeed.toFixed(1)}x`);
     
     // Notify server about speed change
     alt.emitServer(FlyModeEvents.toServer.updateSpeed, flySpeed);
@@ -287,10 +294,11 @@ function increaseFlySpeed() {
  * Decrease fly speed
  */
 function decreaseFlySpeed() {
+    const oldSpeed = flySpeed;
     flySpeed = Math.max(flySpeed - SPEED_INCREMENT, MIN_SPEED);
     flySpeed = roundSpeed(flySpeed);
     
-    console.log('[Fly Mode] Speed decreased to:', flySpeed);
+    console.log(`[Fly Mode] Speed decreased from ${oldSpeed.toFixed(1)}x to ${flySpeed.toFixed(1)}x`);
     
     // Notify server about speed change
     alt.emitServer(FlyModeEvents.toServer.updateSpeed, flySpeed);
