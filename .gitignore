@@ -22,6 +22,7 @@ webview/public/images/**/*.png
 webview/public/images/**/*.jpg
 webview/public/images/**/*.jpeg
 webview/public/images/**/*.svg
+!webview/public/images/weapons/**/*.svg
 webview/public/images/**/*.bmp
 webview/public/images/**/*.webp
 webview/public/fonts/**/*.ttf
