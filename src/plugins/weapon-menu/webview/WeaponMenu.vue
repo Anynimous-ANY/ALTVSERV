@@ -94,13 +94,7 @@ function selectWeapon(weapon: Weapon) {
     try {
         selectedWeapon.value = weapon;
         events.emitServer(WeaponMenuEvents.toServer.giveWeapon, weapon.hash);
-        
-        // Refresh current weapons list after a short delay to allow server to process
-        setTimeout(() => {
-            if (currentTab.value === 'modify') {
-                loadCurrentWeapons();
-            }
-        }, 500);
+        // Note: Weapon list will be automatically refreshed by handleWeaponGiven event
     } catch (err) {
         console.error('Error selecting weapon:', err);
         error.value = 'Failed to select weapon';
