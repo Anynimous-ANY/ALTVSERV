@@ -80,6 +80,7 @@ alt.onClient(FlyModeEvents.toServer.updateSpeed, (player: alt.Player, speed: num
     }
 
     try {
+        console.log(`[Fly Mode] Speed update received from player ${player.id}: ${speed.toFixed(1)}x`);
         const rPlayer = Rebar.usePlayer(player);
         rPlayer.notify.showNotification(`Fly speed: ${speed.toFixed(1)}x`);
     } catch (error) {
