@@ -94,24 +94,19 @@ function flyModeTick() {
         // Freeze player to prevent falling (only if not in vehicle)
         native.freezeEntityPosition(player.scriptID, true);
         
-        // Set Superman flying animation for player - proper diving/flying pose
-        // Try multiple animations to ensure one works
-        const animDict = 'skydive@base';
-        const animName = 'free_idle';
+        // Set Superman flying animation - use fallskydive animation for better Superman pose
+        const animDict = 'move_strafe@stealth';
+        const animName = 'idle';
         
+        // Force the animation every frame to ensure it stays active
         if (!native.isEntityPlayingAnim(player.scriptID, animDict, animName, 3)) {
-            native.requestAnimDict(animDict);
-            let timeout = 0;
-            const animInterval = alt.setInterval(() => {
-                if (native.hasAnimDictLoaded(animDict) || timeout > MAX_ANIM_LOAD_ATTEMPTS) {
-                    alt.clearInterval(animInterval);
-                    if (native.hasAnimDictLoaded(animDict)) {
-                        // Play skydiving animation which shows proper Superman flying pose
-                        native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, -8.0, -1, 1, 0, false, false, false);
-                    }
-                }
-                timeout++;
-            }, 10);
+            if (!native.hasAnimDictLoaded(animDict)) {
+                native.requestAnimDict(animDict);
+            } else {
+                // Play animation with flags that keep it active
+                // Flag 1 = repeat, no interruption
+                native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, -8.0, -1, 1, 0, false, false, false);
+            }
         }
     } else {
         // Freeze vehicle when flying
@@ -146,39 +141,42 @@ function flyModeTick() {
     const baseSpeed = 1.0;
     const currentSpeed = baseSpeed * flySpeed;
     
-    // Check if game controls are enabled (if disabled, likely typing in chat)
-    // Using control 200 (pause menu) as indicator - if disabled, user is likely in a menu/chat
-    const gameControlsEnabled = !native.isControlPressed(0, 200) && !native.isPauseMenuActive();
+    // Better chat detection - disable ALL game controls when chat is open
+    // This prevents ANY key presses from being processed during chat
+    alt.toggleGameControls(!alt.isMenuOpen() && !alt.isConsoleOpen());
     
-    // Forward/Backward movement (Z/S for AZERTY) - only when game controls enabled
-    if (gameControlsEnabled && alt.isKeyDown(KEY_Z)) {
+    // Check if we should process movement (not in menu/chat)
+    const canMove = !alt.isMenuOpen() && !alt.isConsoleOpen();
+    
+    // Forward/Backward movement (Z/S for AZERTY) - only when not in chat
+    if (canMove && alt.isKeyDown(KEY_Z)) {
         newPos.x += forward.x * currentSpeed;
         newPos.y += forward.y * currentSpeed;
         newPos.z += forward.z * currentSpeed;
     }
-    if (gameControlsEnabled && alt.isKeyDown(KEY_S)) {
+    if (canMove && alt.isKeyDown(KEY_S)) {
         newPos.x -= forward.x * currentSpeed;
         newPos.y -= forward.y * currentSpeed;
         newPos.z -= forward.z * currentSpeed;
     }
     
-    // Left/Right movement (Q/D for AZERTY)
-    if (gameControlsEnabled && alt.isKeyDown(KEY_Q)) {
+    // Left/Right movement (Q/D for AZERTY) - straight lateral movement only
+    if (canMove && alt.isKeyDown(KEY_Q)) {
         newPos.x -= right.x * currentSpeed;
         newPos.y -= right.y * currentSpeed;
     }
-    if (gameControlsEnabled && alt.isKeyDown(KEY_D)) {
+    if (canMove && alt.isKeyDown(KEY_D)) {
         newPos.x += right.x * currentSpeed;
         newPos.y += right.y * currentSpeed;
     }
     
-    // Up movement (Shift)
-    if (gameControlsEnabled && alt.isKeyDown(KEY_SHIFT)) {
+    // Up movement (Shift) - pure vertical
+    if (canMove && alt.isKeyDown(KEY_SHIFT)) {
         newPos.z += currentSpeed;
     }
     
-    // Down movement (Ctrl)
-    if (gameControlsEnabled && alt.isKeyDown(KEY_CTRL)) {
+    // Down movement (Ctrl) - pure vertical
+    if (canMove && alt.isKeyDown(KEY_CTRL)) {
         newPos.z -= currentSpeed;
     }
     
@@ -300,26 +298,15 @@ function decreaseFlySpeed() {
 
 /**
  * Handle key press for F10 toggle
- * Using interval check with debounce to prevent double triggers
+ * Simple keydown handler with debounce
  */
-const f10CheckInterval = alt.setInterval(() => {
-    // Check F10 using native controls (control 57 is F10 in GTA)
-    if (native.isDisabledControlJustPressed(0, 57)) {
-        const now = Date.now();
-        if (now - lastF10Press > F10_DEBOUNCE_MS) {
-            lastF10Press = now;
-            alt.emitServer(FlyModeEvents.toServer.toggleFly);
-        }
-    }
-}, 50); // Check every 50ms for reasonable responsiveness
-
-// Backup F10 handler using keydown with debounce
 alt.on('keydown', (key: number) => {
     // F10 key - Toggle fly mode (keycode 121)
     if (key === KEY_F10) {
         const now = Date.now();
         if (now - lastF10Press > F10_DEBOUNCE_MS) {
             lastF10Press = now;
+            console.log('[Fly Mode] F10 pressed, toggling fly mode');
             alt.emitServer(FlyModeEvents.toServer.toggleFly);
         }
     }
