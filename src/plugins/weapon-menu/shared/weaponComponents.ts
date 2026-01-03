@@ -402,14 +402,14 @@ export const WEAPON_COMPONENTS: WeaponComponent[] = [
     { name: 'Default Clip', hash: 0x11AE5C97, weaponHashes: ['weapon_grenadelauncher'] },
 ];
 
-// Weapon tint indices
+// Weapon tint indices with prices
 export const WEAPON_TINTS = [
-    { id: 0, name: 'Default' },
-    { id: 1, name: 'Green' },
-    { id: 2, name: 'Gold' },
-    { id: 3, name: 'Pink' },
-    { id: 4, name: 'Army' },
-    { id: 5, name: 'LSPD' },
-    { id: 6, name: 'Orange' },
-    { id: 7, name: 'Platinum' },
+    { id: 0, name: 'Normal', price: 0 },
+    { id: 1, name: 'Green', price: 500 },
+    { id: 2, name: 'Gold', price: 2000 },
+    { id: 3, name: 'Pink', price: 1500 },
+    { id: 4, name: 'Army', price: 1000 },
+    { id: 5, name: 'LSPD', price: 800 },
+    { id: 6, name: 'Orange', price: 1200 },
+    { id: 7, name: 'Platinum', price: 5000 },
 ];

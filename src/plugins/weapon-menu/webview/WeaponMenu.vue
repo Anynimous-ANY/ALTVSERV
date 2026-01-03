@@ -347,6 +347,26 @@ function isComponentAttached(componentHash: number): boolean {
     return selectedModifyWeapon.value.components.includes(componentHash);
 }
 
+// Get component price based on component hash
+function getComponentPrice(componentHash: number): number {
+    const SUPPRESSOR_HASHES = [0x65EA7EBB, 0xC304849A, 0xA73D4664, 0x837445AA, 0x8C8DCC43, 0xA564D78B];
+    const EXTENDED_CLIP_HASHES = [0xED265A1C, 0xD67B4F2D, 0x249A17D5, 0xD9D3AC92, 0x7B0033B3, 0x64F9C62B];
+    const FLASHLIGHT_HASHES = [0x359B7AAE, 0x9D65907A, 0xAF89DCE3];
+    const SCOPE_HASHES = [0xBC54DA77, 0x1B4C088B, 0xA0D89C42, 0x3CC6BA57, 0x9BC64089];
+    const GRIP_HASHES = [0xC164F53, 0xB1929A4, 0x9D2FBF29];
+    const LUXURY_FINISH_HASHES = [0xD7391086, 0xC6654D72, 0x9B76C72C, 0x77B8AB2F, 0x80DA5257];
+    
+    if (SUPPRESSOR_HASHES.includes(componentHash)) return 5000;
+    if (EXTENDED_CLIP_HASHES.includes(componentHash)) return 3000;
+    if (FLASHLIGHT_HASHES.includes(componentHash)) return 2000;
+    if (SCOPE_HASHES.includes(componentHash)) return 8000;
+    if (GRIP_HASHES.includes(componentHash)) return 2500;
+    if (LUXURY_FINISH_HASHES.includes(componentHash)) return 10000;
+    
+    // Default price for other components
+    return 1500;
+}
+
 // Handle weapon given event - refresh current weapons list
 function handleWeaponGiven() {
     try {
@@ -598,7 +618,7 @@ onUnmounted(() => {
                             class="w-full rounded bg-gray-700 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option v-for="tint in WEAPON_TINTS" :key="tint.id" :value="tint.id">
-                                {{ tint.name }}
+                                {{ tint.name }} {{ tint.price > 0 ? `- ${tint.price}€` : '- Free' }}
                             </option>
                         </select>
                     </div>
@@ -629,7 +649,7 @@ onUnmounted(() => {
                                     :key="comp.hash"
                                     class="flex items-center justify-between rounded bg-gray-600 px-2 py-1"
                                 >
-                                    <span class="text-xs text-white">{{ comp.name }}</span>
+                                    <span class="text-xs text-white">{{ comp.name }} <span class="text-gray-400">({{ getComponentPrice(comp.hash) }}€)</span></span>
                                     <button
                                         @click="removeComponent(selectedModifyWeapon, comp.hash)"
                                         class="rounded bg-red-600 px-2 py-0.5 text-xs text-white hover:bg-red-700"
@@ -650,7 +670,7 @@ onUnmounted(() => {
                                     :key="comp.hash"
                                     class="flex items-center justify-between rounded bg-gray-600 px-2 py-1"
                                 >
-                                    <span class="text-xs text-white">{{ comp.name }}</span>
+                                    <span class="text-xs text-white">{{ comp.name }} <span class="text-green-400">({{ getComponentPrice(comp.hash) }}€)</span></span>
                                     <button
                                         @click="addComponent(selectedModifyWeapon, comp.hash)"
                                         class="rounded bg-green-600 px-2 py-0.5 text-xs text-white hover:bg-green-700"
