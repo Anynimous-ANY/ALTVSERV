@@ -1,9 +1,13 @@
 import * as alt from 'alt-server';
 import { useRebar } from '@Server/index.js';
 import { FlyModeEvents } from '../shared/events.js';
+import { useEntityPermissions } from '@Server/systems/permissions/entityPermissions.js';
 
 const Rebar = useRebar();
 const messenger = Rebar.messenger.useMessenger();
+
+// Cache the permission handler
+const adminPermissionCheck = useEntityPermissions({ permissions: ['admin'] });
 
 // Track fly mode state per player
 const flyModeStates = new Map<number, boolean>();
@@ -58,10 +62,10 @@ alt.onClient(FlyModeEvents.toServer.toggleFly, (player: alt.Player) => {
 
     try {
         // Check if player has admin permission
-        const rPlayer = Rebar.usePlayer(player);
-        const hasPermission = rPlayer.account.hasPermission('admin');
+        const hasPermission = adminPermissionCheck.check(player);
         
         if (!hasPermission) {
+            const rPlayer = Rebar.usePlayer(player);
             rPlayer.notify.showNotification('You do not have permission to use fly mode');
             return;
         }
@@ -79,6 +83,7 @@ alt.onClient(FlyModeEvents.toServer.updateSpeed, (player: alt.Player, speed: num
     }
 
     try {
+        console.log(`[Fly Mode] Speed update received from player ${player.id}: ${speed.toFixed(1)}x`);
         const rPlayer = Rebar.usePlayer(player);
         rPlayer.notify.showNotification(`Fly speed: ${speed.toFixed(1)}x`);
     } catch (error) {
