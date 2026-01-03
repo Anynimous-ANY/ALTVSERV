@@ -18,22 +18,60 @@ function getWeaponName(hash: string): string {
     return weapon ? weapon.name : hash;
 }
 
+// Component pricing constants
+const SUPPRESSOR_HASHES = [0x65EA7EBB, 0xC304849A, 0xA73D4664, 0x837445AA, 0x8C8DCC43, 0xA564D78B];
+const EXTENDED_CLIP_HASHES = [0xED265A1C, 0xD67B4F2D, 0x249A17D5, 0xD9D3AC92, 0x7B0033B3, 0x64F9C62B];
+const FLASHLIGHT_HASHES = [0x359B7AAE, 0x9D65907A, 0xAF89DCE3];
+const SCOPE_HASHES = [0xBC54DA77, 0x1B4C088B, 0xA0D89C42, 0x3CC6BA57, 0x9BC64089];
+const GRIP_HASHES = [0xC164F53, 0xB1929A4, 0x9D2FBF29];
+const LUXURY_FINISH_HASHES = [0xD7391086, 0xC6654D72, 0x9B76C72C, 0x77B8AB2F, 0x80DA5257];
+
+// Component name mapping
+const COMPONENT_NAMES: { [key: number]: string } = {
+    0x65EA7EBB: 'Suppressor',
+    0xC304849A: 'Suppressor',
+    0xA73D4664: 'Suppressor',
+    0xED265A1C: 'Extended Clip',
+    0xD67B4F2D: 'Extended Clip',
+    0x249A17D5: 'Extended Clip',
+    0x359B7AAE: 'Flashlight',
+    0xBC54DA77: 'Scope',
+    0xC164F53: 'Grip',
+    0xD7391086: 'Luxury Finish',
+};
+
+// Tint pricing constants
+const TINT_PRICES: { [key: number]: number } = {
+    0: 0,      // Normal - Free
+    1: 500,    // Green
+    2: 2000,   // Gold
+    3: 1500,   // Pink
+    4: 1000,   // Army
+    5: 800,    // LSPD
+    6: 1200,   // Orange
+    7: 5000,   // Platinum
+};
+
+// Tint name mapping
+const TINT_NAMES: { [key: number]: string } = {
+    0: 'Normal',
+    1: 'Green',
+    2: 'Gold',
+    3: 'Pink',
+    4: 'Army',
+    5: 'LSPD',
+    6: 'Orange',
+    7: 'Platinum',
+};
+
 // Get component price based on component hash
 function getComponentPrice(componentHash: number): number {
-    // Define pricing based on component type
-    const suppressorHashes = [0x65EA7EBB, 0xC304849A, 0xA73D4664, 0x837445AA, 0x8C8DCC43, 0xA564D78B];
-    const extendedClipHashes = [0xED265A1C, 0xD67B4F2D, 0x249A17D5, 0xD9D3AC92, 0x7B0033B3, 0x64F9C62B];
-    const flashlightHashes = [0x359B7AAE, 0x9D65907A, 0xAF89DCE3];
-    const scopeHashes = [0xBC54DA77, 0x1B4C088B, 0xA0D89C42, 0x3CC6BA57, 0x9BC64089];
-    const gripHashes = [0xC164F53, 0xB1929A4, 0x9D2FBF29];
-    const luxuryFinishHashes = [0xD7391086, 0xC6654D72, 0x9B76C72C, 0x77B8AB2F, 0x80DA5257];
-    
-    if (suppressorHashes.includes(componentHash)) return 5000;
-    if (extendedClipHashes.includes(componentHash)) return 3000;
-    if (flashlightHashes.includes(componentHash)) return 2000;
-    if (scopeHashes.includes(componentHash)) return 8000;
-    if (gripHashes.includes(componentHash)) return 2500;
-    if (luxuryFinishHashes.includes(componentHash)) return 10000;
+    if (SUPPRESSOR_HASHES.includes(componentHash)) return 5000;
+    if (EXTENDED_CLIP_HASHES.includes(componentHash)) return 3000;
+    if (FLASHLIGHT_HASHES.includes(componentHash)) return 2000;
+    if (SCOPE_HASHES.includes(componentHash)) return 8000;
+    if (GRIP_HASHES.includes(componentHash)) return 2500;
+    if (LUXURY_FINISH_HASHES.includes(componentHash)) return 10000;
     
     // Default price for other components
     return 1500;
@@ -41,49 +79,17 @@ function getComponentPrice(componentHash: number): number {
 
 // Get component name from hash
 function getComponentName(componentHash: number): string {
-    const components: { [key: number]: string } = {
-        0x65EA7EBB: 'Suppressor',
-        0xC304849A: 'Suppressor',
-        0xA73D4664: 'Suppressor',
-        0xED265A1C: 'Extended Clip',
-        0xD67B4F2D: 'Extended Clip',
-        0x249A17D5: 'Extended Clip',
-        0x359B7AAE: 'Flashlight',
-        0xBC54DA77: 'Scope',
-        0xC164F53: 'Grip',
-        0xD7391086: 'Luxury Finish',
-    };
-    return components[componentHash] || `Component ${componentHash.toString(16)}`;
+    return COMPONENT_NAMES[componentHash] || `Component ${componentHash.toString(16)}`;
 }
 
 // Get tint price based on tint index
 function getTintPrice(tintIndex: number): number {
-    const tintPrices: { [key: number]: number } = {
-        0: 0,      // Normal - Free
-        1: 500,    // Green
-        2: 2000,   // Gold
-        3: 1500,   // Pink
-        4: 1000,   // Army
-        5: 800,    // LSPD
-        6: 1200,   // Orange
-        7: 5000,   // Platinum
-    };
-    return tintPrices[tintIndex] ?? 0;
+    return TINT_PRICES[tintIndex] ?? 0;
 }
 
 // Get tint name from index
 function getTintName(tintIndex: number): string {
-    const tintNames: { [key: number]: string } = {
-        0: 'Normal',
-        1: 'Green',
-        2: 'Gold',
-        3: 'Pink',
-        4: 'Army',
-        5: 'LSPD',
-        6: 'Orange',
-        7: 'Platinum',
-    };
-    return tintNames[tintIndex] ?? `Tint ${tintIndex}`;
+    return TINT_NAMES[tintIndex] ?? `Tint ${tintIndex}`;
 }
 
 // Register the /weapons command
