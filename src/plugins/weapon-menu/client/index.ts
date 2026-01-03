@@ -40,6 +40,10 @@ alt.everyTick(() => {
     native.disableControlAction(0, 27, true); // INPUT_PHONE
     native.disableControlAction(0, 19, true); // INPUT_CHARACTER_WHEEL
     
+    // Disable pause menu and camera view changes
+    native.disableControlAction(0, 199, true); // INPUT_FRONTEND_PAUSE (P key - pause menu)
+    native.disableControlAction(0, 0, true); // INPUT_NEXT_CAMERA (V key - camera view)
+    
     // Disable other menu-related controls
     native.disableControlAction(0, 56, true); // INPUT_SPRINT
     
