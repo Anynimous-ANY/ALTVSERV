@@ -286,8 +286,9 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeapon, async (player: alt.Player, 
                     const ammo = player.getWeaponAmmo(weapon.hash);
                     
                     allWeapons.push({
-                        hash: weapon.hash,
+                        hash: weaponDef.hash, // Use string hash from weaponDef
                         name: weaponDef.name,
+                        image: weaponDef.image, // Include image property
                         ammo: ammo,
                         tintIndex: weapon.tintIndex,
                         components: weapon.components || [],
@@ -341,8 +342,9 @@ alt.onClient(WeaponMenuEvents.toServer.setWeaponTint, async (player: alt.Player,
                     const ammo = player.getWeaponAmmo(weapon.hash);
                     
                     allWeapons.push({
-                        hash: weapon.hash,
+                        hash: weaponDef.hash, // Use string hash from weaponDef
                         name: weaponDef.name,
+                        image: weaponDef.image, // Include image property
                         ammo: ammo,
                         tintIndex: weapon.tintIndex,
                         components: weapon.components || [],
@@ -399,8 +401,9 @@ alt.onClient(WeaponMenuEvents.toServer.setWeaponAmmo, async (player: alt.Player,
                     const weaponAmmo = player.getWeaponAmmo(weapon.hash);
                     
                     allWeapons.push({
-                        hash: weapon.hash,
+                        hash: weaponDef.hash, // Use string hash from weaponDef
                         name: weaponDef.name,
+                        image: weaponDef.image, // Include image property
                         ammo: weaponAmmo,
                         tintIndex: weapon.tintIndex,
                         components: weapon.components || [],
@@ -463,12 +466,13 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
             }
 
             allWeapons.push({
-                hash: weapon.hash,
-                name: weaponName,
-                ammo: player.getWeaponAmmo(weapon.hash),
-                tintIndex: weapon.tintIndex,
-                components: weapon.components || [],
-            });
+                        hash: weaponDef.hash, // Use string hash from weaponDef
+                        name: weaponDef.name,
+                        image: weaponDef.image, // Include image property
+                        ammo: ammo,
+                        tintIndex: weapon.tintIndex,
+                        components: weapon.components || [],
+                    });
         }
 
         const webview = Rebar.player.useWebview(player);
@@ -525,12 +529,13 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
             }
 
             allWeapons.push({
-                hash: weapon.hash,
-                name: weaponName,
-                ammo: player.getWeaponAmmo(weapon.hash),
-                tintIndex: weapon.tintIndex,
-                components: weapon.components || [],
-            });
+                        hash: weaponDef.hash, // Use string hash from weaponDef
+                        name: weaponDef.name,
+                        image: weaponDef.image, // Include image property
+                        ammo: ammo,
+                        tintIndex: weapon.tintIndex,
+                        components: weapon.components || [],
+                    });
         }
 
         const webview = Rebar.player.useWebview(player);
