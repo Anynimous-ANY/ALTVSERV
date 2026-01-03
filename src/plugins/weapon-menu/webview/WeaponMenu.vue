@@ -148,20 +148,21 @@ function isFavorite(weapon: Weapon): boolean {
 }
 
 // Get weapon image path with proper fallback handling
+// Images are served from the plugin's images folder via ReBar's asset system
 function getWeaponImage(weapon: Weapon | any): string {
     // Use explicit image property if available (already includes .svg extension)
     if (weapon?.image) {
-        return `/images/weapons/${weapon.image}`;
+        return `/plugins/weapon-menu/images/${weapon.image}`;
     }
     
     // Generate image name from hash if available
     if (weapon?.hash && typeof weapon.hash === 'string') {
         const hashWithoutPrefix = weapon.hash.replace('weapon_', '').replace('gadget_', '');
-        return `/images/weapons/${weapon.hash}.svg`; // Use full hash with .svg extension
+        return `/plugins/weapon-menu/images/${weapon.hash}.svg`; // Use full hash with .svg extension
     }
     
     // Fallback to default placeholder
-    return '/images/weapons/placeholder.svg';
+    return '/plugins/weapon-menu/images/placeholder.svg';
 }
 
 // Fallback to placeholder if image fails to load
