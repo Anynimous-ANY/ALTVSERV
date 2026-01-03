@@ -17,6 +17,9 @@ const selectedModifyWeapon = ref<any | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 
+// Footer help text
+const footerText = 'ESC to close | You can walk/drive while menu is open | Click weapon to buy | ⭐ to favorite';
+
 let searchDebounceTimer: number | null = null;
 
 // Debounce search query
@@ -132,7 +135,7 @@ function isFavorite(weapon: Weapon): boolean {
 
 // Get weapon image path
 function getWeaponImage(weapon: Weapon | any): string {
-    const imageName = weapon.image || weapon.hash?.replace('weapon_', '') + '.png' || 'default.png';
+    const imageName = weapon.image || (weapon.hash?.replace('weapon_', '') + '.png') || 'default.png';
     return `/images/weapons/${imageName}`;
 }
 
@@ -609,7 +612,7 @@ onUnmounted(() => {
 
         <!-- Footer Info -->
         <div class="border-t border-gray-700 bg-gray-800 px-4 py-2 text-center text-xs text-gray-400">
-            ESC to close | You can walk/drive while menu is open | Click weapon to buy | ⭐ to favorite
+            {{ footerText }}
         </div>
     </div>
 </template>
