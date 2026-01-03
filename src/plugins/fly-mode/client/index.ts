@@ -1,9 +1,6 @@
 import * as alt from 'alt-client';
 import * as native from 'natives';
-import { useRebarClient } from '../../../main/client/index.js';
 import { FlyModeEvents } from '../shared/events.js';
-
-const Rebar = useRebarClient();
 
 // Fly mode state
 let isFlyModeActive = false;
@@ -24,14 +21,6 @@ const KEY_SPACE = 32;
 const KEY_SHIFT = 16;
 const KEY_F10 = 121;
 
-// Camera controls
-const CONTROL_MOVE_LR = 30;
-const CONTROL_MOVE_UD = 31;
-
-// Mouse wheel controls
-const CONTROL_SCROLL_UP = 241;
-const CONTROL_SCROLL_DOWN = 242;
-
 /**
  * Main fly mode tick function
  * Handles player movement in fly mode
@@ -51,6 +40,14 @@ function flyModeTick() {
     
     // Keep player invisible to prevent animation issues
     native.setEntityAlpha(player.scriptID, 0, false);
+    
+    // Handle mouse wheel for speed control
+    if (native.isControlJustPressed(0, 14) || native.isControlJustPressed(0, 241)) {
+        increaseFlySpeed();
+    }
+    if (native.isControlJustPressed(0, 15) || native.isControlJustPressed(0, 242)) {
+        decreaseFlySpeed();
+    }
     
     // Get camera direction
     const camRot = native.getGameplayCamRot(2);
@@ -217,25 +214,6 @@ alt.on('keyup', (key: number) => {
     // F10 key - Toggle fly mode
     if (key === KEY_F10) {
         alt.emitServer(FlyModeEvents.toServer.toggleFly);
-    }
-});
-
-/**
- * Handle mouse wheel for speed control (only when flying)
- */
-alt.everyTick(() => {
-    if (!isFlyModeActive) {
-        return;
-    }
-    
-    // Scroll up - increase speed (Control 14 or 241)
-    if (native.isControlJustPressed(0, 14) || native.isControlJustPressed(0, 241)) {
-        increaseFlySpeed();
-    }
-    
-    // Scroll down - decrease speed (Control 15 or 242)
-    if (native.isControlJustPressed(0, 15) || native.isControlJustPressed(0, 242)) {
-        decreaseFlySpeed();
     }
 });
 

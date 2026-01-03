@@ -8,6 +8,30 @@ const messenger = Rebar.messenger.useMessenger();
 // Track fly mode state per player
 const flyModeStates = new Map<number, boolean>();
 
+/**
+ * Get current fly mode state for a player
+ */
+function getFlyModeState(playerId: number): boolean {
+    return flyModeStates.get(playerId) || false;
+}
+
+/**
+ * Toggle fly mode for a player
+ */
+function toggleFlyMode(player: alt.Player): void {
+    const currentState = getFlyModeState(player.id);
+    const newState = !currentState;
+    flyModeStates.set(player.id, newState);
+
+    // Emit to client to handle fly mode
+    alt.emitClient(player, FlyModeEvents.toClient.setFlyMode, newState);
+
+    // Notify player
+    const rPlayer = Rebar.usePlayer(player);
+    const statusText = newState ? 'enabled' : 'disabled';
+    rPlayer.notify.showNotification(`Fly mode ${statusText}`);
+}
+
 // Register /fly command
 messenger.commands.register({
     name: 'fly',
@@ -19,19 +43,7 @@ messenger.commands.register({
         }
 
         try {
-            const rPlayer = Rebar.usePlayer(player);
-            
-            // Toggle fly mode state
-            const currentState = flyModeStates.get(player.id) || false;
-            const newState = !currentState;
-            flyModeStates.set(player.id, newState);
-
-            // Emit to client to handle fly mode
-            alt.emitClient(player, FlyModeEvents.toClient.setFlyMode, newState);
-
-            // Notify player
-            const statusText = newState ? 'enabled' : 'disabled';
-            rPlayer.notify.showNotification(`Fly mode ${statusText}`);
+            toggleFlyMode(player);
         } catch (error) {
             console.error('[Fly Mode] Error toggling fly mode:', error);
         }
@@ -54,17 +66,7 @@ alt.onClient(FlyModeEvents.toServer.toggleFly, (player: alt.Player) => {
             return;
         }
 
-        // Toggle fly mode state
-        const currentState = flyModeStates.get(player.id) || false;
-        const newState = !currentState;
-        flyModeStates.set(player.id, newState);
-
-        // Emit to client to handle fly mode
-        alt.emitClient(player, FlyModeEvents.toClient.setFlyMode, newState);
-
-        // Notify player
-        const statusText = newState ? 'enabled' : 'disabled';
-        rPlayer.notify.showNotification(`Fly mode ${statusText}`);
+        toggleFlyMode(player);
     } catch (error) {
         console.error('[Fly Mode] Error toggling fly mode from client:', error);
     }
