@@ -26,8 +26,8 @@ const KEY_CTRL = 17; // Down (was Shift)
 const KEY_F10 = 121;
 
 // Mouse wheel control IDs
-const CONTROL_WEAPON_WHEEL_NEXT = 14; // Scroll up
-const CONTROL_WEAPON_WHEEL_PREV = 15; // Scroll down
+const CONTROL_WEAPON_WHEEL_NEXT = 14; // Scroll down (next weapon in list)
+const CONTROL_WEAPON_WHEEL_PREV = 15; // Scroll up (previous weapon in list)
 const CONTROL_SELECT_NEXT_WEAPON = 16; // Select next weapon
 const CONTROL_SELECT_PREV_WEAPON = 17; // Select prev weapon
 const CONTROL_SELECT_WEAPON = 37; // Select weapon (tab)
@@ -77,17 +77,18 @@ function flyModeTick() {
     // Handle mouse wheel for speed control
     const now = Date.now();
     if (now - lastSpeedChange > SPEED_CHANGE_DEBOUNCE_MS) {
-        const scrollUp = native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_NEXT) || 
+        // Note: In GTA V, WEAPON_WHEEL_PREV (15) is scroll UP, WEAPON_WHEEL_NEXT (14) is scroll DOWN
+        const scrollUp = native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_PREV) || 
                         native.isDisabledControlJustPressed(0, CONTROL_SCROLL_UP_ALTERNATE);
-        const scrollDown = native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_PREV) || 
+        const scrollDown = native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_NEXT) || 
                           native.isDisabledControlJustPressed(0, CONTROL_SCROLL_DOWN_ALTERNATE);
         
         if (scrollUp) {
-            console.log('[Fly Mode] Mouse wheel UP detected (controls: 14 or 241)');
+            console.log('[Fly Mode] Mouse wheel UP detected (control 15 or 241) - Increasing speed');
             lastSpeedChange = now;
             increaseFlySpeed();
         } else if (scrollDown) {
-            console.log('[Fly Mode] Mouse wheel DOWN detected (controls: 15 or 242)');
+            console.log('[Fly Mode] Mouse wheel DOWN detected (control 14 or 242) - Decreasing speed');
             lastSpeedChange = now;
             decreaseFlySpeed();
         }
