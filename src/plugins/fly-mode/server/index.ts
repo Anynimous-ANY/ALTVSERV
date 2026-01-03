@@ -6,6 +6,9 @@ import { useEntityPermissions } from '@Server/systems/permissions/entityPermissi
 const Rebar = useRebar();
 const messenger = Rebar.messenger.useMessenger();
 
+// Cache the permission handler
+const adminPermissionCheck = useEntityPermissions({ permissions: ['admin'] });
+
 // Track fly mode state per player
 const flyModeStates = new Map<number, boolean>();
 
@@ -59,7 +62,7 @@ alt.onClient(FlyModeEvents.toServer.toggleFly, (player: alt.Player) => {
 
     try {
         // Check if player has admin permission
-        const hasPermission = useEntityPermissions({ permissions: ['admin'] }).check(player);
+        const hasPermission = adminPermissionCheck.check(player);
         
         if (!hasPermission) {
             const rPlayer = Rebar.usePlayer(player);
