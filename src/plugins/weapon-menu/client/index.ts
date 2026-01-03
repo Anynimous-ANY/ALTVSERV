@@ -42,7 +42,6 @@ alt.everyTick(() => {
     
     // Disable other menu-related controls
     native.disableControlAction(0, 56, true); // INPUT_SPRINT
-    native.disableControlAction(0, 25, true); // INPUT_AIM (already disabled above but ensuring)
     
     // Lock camera rotation (prevent right-click camera movement)
     native.disableControlAction(0, 1, true); // INPUT_LOOK_LR (Look Left/Right)

@@ -139,10 +139,21 @@ function isFavorite(weapon: Weapon): boolean {
     return favorites.value.includes(weapon.hash);
 }
 
-// Get weapon image path
+// Get weapon image path with proper fallback handling
 function getWeaponImage(weapon: Weapon | any): string {
-    const imageName = weapon.image || `${weapon.hash?.replace('weapon_', '') || 'default'}.png`;
-    return `/images/weapons/${imageName}`;
+    // Use explicit image property if available
+    if (weapon?.image) {
+        return `/images/weapons/${weapon.image}`;
+    }
+    
+    // Generate image name from hash if available
+    if (weapon?.hash) {
+        const hashWithoutPrefix = weapon.hash.replace('weapon_', '');
+        return `/images/weapons/${hashWithoutPrefix}.png`;
+    }
+    
+    // Fallback to default placeholder
+    return '/images/weapons/default.png';
 }
 
 // Fallback to placeholder if image fails to load
