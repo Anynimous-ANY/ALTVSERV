@@ -105,23 +105,17 @@ function flyModeTick() {
         // Freeze player to prevent falling (only if not in vehicle)
         native.freezeEntityPosition(player.scriptID, true);
         
-        // Set meditation animation in loop
+        // Set meditation animation - force play every frame
         const animDict = 'rcmcollect_paperleadinout@';
         const animName = 'meditiate_idle';
         
         // Request animation dictionary if not loaded
         if (!native.hasAnimDictLoaded(animDict)) {
             native.requestAnimDict(animDict);
-        }
-        
-        // Force play animation every frame to ensure it loops continuously
-        if (native.hasAnimDictLoaded(animDict)) {
-            // Always check and restart animation if not playing
-            if (!native.isEntityPlayingAnim(player.scriptID, animDict, animName, 3)) {
-                // Play animation with looping flags
-                // Flag 1 (repeat) | Flag 2 (stop on last frame) = 3
-                native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, 0.0, -1, 3, 0, false, false, false);
-            }
+        } else {
+            // Force the animation to play every frame
+            // Flag 1 (repeat/loop) = continuous playback
+            native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, 1.0, -1, 1, 0.0, false, false, false);
         }
         
         // Set player heading to match camera rotation
