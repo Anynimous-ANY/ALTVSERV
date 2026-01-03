@@ -225,8 +225,8 @@ messenger.commands.register({
 alt.on('rebar:playerCharacterBound', initPlayerMoney);
 alt.onClient(MoneyEvents.toServer.openBank, handleOpenBank);
 alt.onClient(MoneyEvents.toServer.closeBank, handleCloseBank);
-alt.onClient(MoneyEvents.toServer.deposit, handleDeposit);
-alt.onClient(MoneyEvents.toServer.withdraw, handleWithdraw);
+alt.onRpc(MoneyEvents.toServer.deposit, handleDeposit);
+alt.onRpc(MoneyEvents.toServer.withdraw, handleWithdraw);
 
 // Export API for other plugins
 const API_NAME = 'money-api';
