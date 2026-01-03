@@ -147,28 +147,35 @@ function isFavorite(weapon: Weapon): boolean {
     return favorites.value.includes(weapon.hash);
 }
 
-// Get weapon image path with proper fallback handling
-// Images are served from the plugin's images folder via ReBar's asset system
-function getWeaponImage(weapon: Weapon | any): string {
-    // Use explicit image property if available (already includes .svg extension)
-    if (weapon?.image) {
-        return `/plugins/weapon-menu/images/${weapon.image}`;
-    }
+// Get weapon emoji based on category
+function getWeaponEmoji(weapon: Weapon | any): string {
+    const category = weapon?.category || '';
     
-    // Generate image name from hash if available
-    if (weapon?.hash && typeof weapon.hash === 'string') {
-        const hashWithoutPrefix = weapon.hash.replace('weapon_', '').replace('gadget_', '');
-        return `/plugins/weapon-menu/images/${weapon.hash}.svg`; // Use full hash with .svg extension
+    // Map categories to emojis
+    switch (category) {
+        case 'Handguns':
+            return '🔫'; // Pistol emoji
+        case 'SMGs':
+            return '🔫'; // Pistol emoji (submachine guns)
+        case 'Assault Rifles':
+            return '🎯'; // Direct hit / rifle emoji
+        case 'Sniper Rifles':
+            return '🎯'; // Scope / precision emoji
+        case 'Shotguns':
+            return '💥'; // Collision / shotgun blast emoji
+        case 'Machine Guns':
+            return '⚡'; // High voltage / rapid fire emoji
+        case 'Heavy Weapons':
+            return '💣'; // Bomb emoji for launchers/explosives
+        case 'Throwables':
+            return '💣'; // Bomb emoji for grenades
+        case 'Melee':
+            return '🔪'; // Knife emoji for melee weapons
+        case 'Misc':
+            return '🛠️'; // Tools emoji for misc items
+        default:
+            return '❓'; // Question mark for unknown
     }
-    
-    // Fallback to default placeholder
-    return '/plugins/weapon-menu/images/placeholder.svg';
-}
-
-// Fallback to placeholder if image fails to load
-function handleImageError(event: Event) {
-    const img = event.target as HTMLImageElement;
-    img.src = '/images/weapons/placeholder.svg';
 }
 
 function setFavorites(favs: string[] | null) {
@@ -517,14 +524,9 @@ onUnmounted(() => {
                             @keydown.enter="selectWeapon(weapon)"
                             @keydown.space.prevent="selectWeapon(weapon)"
                         >
-                            <!-- Weapon Image -->
+                            <!-- Weapon Emoji Icon -->
                             <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-700">
-                                <img 
-                                    :src="getWeaponImage(weapon)" 
-                                    :alt="weapon.name"
-                                    @error="handleImageError"
-                                    class="h-full w-full object-contain"
-                                />
+                                <span class="text-2xl">{{ getWeaponEmoji(weapon) }}</span>
                             </div>
                             
                             <!-- Weapon Info -->
@@ -572,14 +574,9 @@ onUnmounted(() => {
                         class="flex cursor-pointer items-center gap-2 rounded-lg bg-gray-800 px-3 py-2 transition hover:bg-gray-700"
                         :class="selectedModifyWeapon?.hash === weapon.hash ? 'ring-2 ring-blue-500' : ''"
                     >
-                        <!-- Weapon Image -->
+                        <!-- Weapon Emoji Icon -->
                         <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-700">
-                            <img 
-                                :src="getWeaponImage(weapon)" 
-                                :alt="weapon.name"
-                                @error="handleImageError"
-                                class="h-full w-full object-contain"
-                            />
+                            <span class="text-xl">{{ getWeaponEmoji(weapon) }}</span>
                         </div>
                         
                         <!-- Weapon Info -->
@@ -597,14 +594,9 @@ onUnmounted(() => {
             <!-- Modification Panel -->
             <div class="w-1/2 overflow-y-auto p-4">
                 <div v-if="selectedModifyWeapon">
-                    <!-- Weapon Image -->
+                    <!-- Weapon Emoji Icon -->
                     <div class="mb-4 flex h-24 w-full items-center justify-center overflow-hidden rounded-lg bg-gray-700">
-                        <img 
-                            :src="getWeaponImage(selectedModifyWeapon)" 
-                            :alt="selectedModifyWeapon.name"
-                            @error="handleImageError"
-                            class="h-full w-auto object-contain"
-                        />
+                        <span class="text-6xl">{{ getWeaponEmoji(selectedModifyWeapon) }}</span>
                     </div>
                     
                     <h3 class="mb-3 text-sm font-bold text-white">{{ selectedModifyWeapon.name || getWeaponName(selectedModifyWeapon) }}</h3>
