@@ -157,21 +157,24 @@ function handleCloseBank(player: alt.Player) {
 }
 
 // Handle deposit
-async function handleDeposit(player: alt.Player, amount: number): Promise<boolean> {
+async function handleDeposit(player: alt.Player, amount: number) {
     if (!player || !player.valid) {
         console.warn('[Money Display] Invalid player in handleDeposit');
-        return false;
+        Rebar.player.useWebview(player).emit(MoneyEvents.toWebview.depositResult, false, amount);
+        return;
     }
     
     if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
         console.warn('[Money Display] Invalid amount in handleDeposit:', amount);
-        return false;
+        Rebar.player.useWebview(player).emit(MoneyEvents.toWebview.depositResult, false, amount);
+        return;
     }
     
     const currentMoney = getPlayerMoney(player);
     
     if (currentMoney < amount) {
-        return false;
+        Rebar.player.useWebview(player).emit(MoneyEvents.toWebview.depositResult, false, amount);
+        return;
     }
     
     // TODO: Implement separate bank account system
@@ -183,19 +186,22 @@ async function handleDeposit(player: alt.Player, amount: number): Promise<boolea
         rPlayer.notify.showNotification(`Dépôt de ${amount}€ effectué avec succès`);
     }
     
-    return success;
+    // Emit result back to webview
+    Rebar.player.useWebview(player).emit(MoneyEvents.toWebview.depositResult, success, amount);
 }
 
 // Handle withdraw
-async function handleWithdraw(player: alt.Player, amount: number): Promise<boolean> {
+async function handleWithdraw(player: alt.Player, amount: number) {
     if (!player || !player.valid) {
         console.warn('[Money Display] Invalid player in handleWithdraw');
-        return false;
+        Rebar.player.useWebview(player).emit(MoneyEvents.toWebview.withdrawResult, false, amount);
+        return;
     }
     
     if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
         console.warn('[Money Display] Invalid amount in handleWithdraw:', amount);
-        return false;
+        Rebar.player.useWebview(player).emit(MoneyEvents.toWebview.withdrawResult, false, amount);
+        return;
     }
     
     // TODO: Implement bank balance checking
@@ -209,7 +215,8 @@ async function handleWithdraw(player: alt.Player, amount: number): Promise<boole
         rPlayer.notify.showNotification(`Solde bancaire insuffisant`);
     }
     
-    return success;
+    // Emit result back to webview
+    Rebar.player.useWebview(player).emit(MoneyEvents.toWebview.withdrawResult, success, amount);
 }
 
 // Register /bank command
@@ -225,8 +232,8 @@ messenger.commands.register({
 alt.on('rebar:playerCharacterBound', initPlayerMoney);
 alt.onClient(MoneyEvents.toServer.openBank, handleOpenBank);
 alt.onClient(MoneyEvents.toServer.closeBank, handleCloseBank);
-alt.onRpc(MoneyEvents.toServer.deposit, handleDeposit);
-alt.onRpc(MoneyEvents.toServer.withdraw, handleWithdraw);
+alt.onClient(MoneyEvents.toServer.deposit, handleDeposit);
+alt.onClient(MoneyEvents.toServer.withdraw, handleWithdraw);
 
 // Export API for other plugins
 const API_NAME = 'money-api';

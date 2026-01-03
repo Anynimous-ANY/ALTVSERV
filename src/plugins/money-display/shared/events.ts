@@ -1,6 +1,8 @@
 export const MoneyEvents = {
     toWebview: {
         updateMoney: 'money:toWebview:updateMoney',
+        depositResult: 'money:toWebview:depositResult',
+        withdrawResult: 'money:toWebview:withdrawResult',
     },
     toServer: {
         openBank: 'money:toServer:openBank',
