@@ -29,10 +29,11 @@ A fly/noclip plugin for alt:V servers using ReBar framework. Allows admin users 
 
 ### Speed Control
 
-- Default speed: 1.0x
-- Minimum speed: 0.1x
-- Maximum speed: 20.0x
-- Speed increment: 0.5x per scroll
+- Default speed: 0.5x
+- Minimum speed: 0.05x (very slow)
+- Maximum speed: 5.0x (fast)
+- Speed increment: 0.1x per scroll
+- Range includes: 0.05, 0.15, 0.25, 0.35, 0.45, 0.5 (default), 0.6, 0.7, 0.8, 0.9, 1.0, ..., up to 5.0x
 
 ### Vehicle Flying
 

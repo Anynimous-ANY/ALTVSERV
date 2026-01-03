@@ -4,13 +4,13 @@ import { FlyModeEvents } from '../shared/events.js';
 
 // Fly mode state
 let isFlyModeActive = false;
-let flySpeed = 1.0; // Default speed multiplier - reduced for better control
+let flySpeed = 0.5; // Default speed multiplier - medium speed
 let flyInterval: number | null = null;
 
-// Speed settings
-const MIN_SPEED = 0.1; // Reduced from 0.5 for slower movement option
-const MAX_SPEED = 20.0; // Reduced from 50.0 for better control
-const SPEED_INCREMENT = 0.5; // Reduced from 1.0 for finer speed control
+// Speed settings - expanded range for more control
+const MIN_SPEED = 0.05; // Very slow minimum (5 slower speeds from 0.5: 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.05)
+const MAX_SPEED = 5.0; // Maximum speed (5 faster speeds from 0.5: 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0)
+const SPEED_INCREMENT = 0.1; // Fine increment for precise control
 
 // Control keys (AZERTY layout)
 const KEY_Z = 90; // Forward (was W)
@@ -92,16 +92,20 @@ function flyModeTick() {
         // Freeze player to prevent falling (only if not in vehicle)
         native.freezeEntityPosition(player.scriptID, true);
         
-        // Set Superman flying animation for player - lying on stomach with fists forward
-        if (!native.isEntityPlayingAnim(player.scriptID, 'swimming@swim', 'swim_breast', 3)) {
-            native.requestAnimDict('swimming@swim');
+        // Set Superman flying animation for player - proper diving/flying pose
+        // Try multiple animations to ensure one works
+        const animDict = 'skydive@base';
+        const animName = 'free_idle';
+        
+        if (!native.isEntityPlayingAnim(player.scriptID, animDict, animName, 3)) {
+            native.requestAnimDict(animDict);
             let timeout = 0;
             const animInterval = alt.setInterval(() => {
-                if (native.hasAnimDictLoaded('swimming@swim') || timeout > MAX_ANIM_LOAD_ATTEMPTS) {
+                if (native.hasAnimDictLoaded(animDict) || timeout > MAX_ANIM_LOAD_ATTEMPTS) {
                     alt.clearInterval(animInterval);
-                    if (native.hasAnimDictLoaded('swimming@swim')) {
-                        // Play swimming animation that looks like Superman flying pose
-                        native.taskPlayAnim(player.scriptID, 'swimming@swim', 'swim_breast', 8.0, -8.0, -1, 1, 0, false, false, false);
+                    if (native.hasAnimDictLoaded(animDict)) {
+                        // Play skydiving animation which shows proper Superman flying pose
+                        native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, -8.0, -1, 1, 0, false, false, false);
                     }
                 }
                 timeout++;
@@ -136,42 +140,43 @@ function flyModeTick() {
     let pos = vehicle ? vehicle.pos : player.pos;
     let newPos = { x: pos.x, y: pos.y, z: pos.z };
     
-    // Calculate speed based on current multiplier (adjusted for better control)
-    const baseSpeed = 1.0; // Reduced from 2.0 for better control
+    // Calculate speed based on current multiplier
+    const baseSpeed = 1.0;
     const currentSpeed = baseSpeed * flySpeed;
     
-    // Check if chat is open once - reuse this value for all key checks
-    const isChatOpen = alt.isMenuOpen() || alt.isConsoleOpen();
+    // Check if game controls are enabled (if disabled, likely typing in chat)
+    // Using control 200 (pause menu) as indicator - if disabled, user is likely in a menu/chat
+    const gameControlsEnabled = !native.isControlPressed(0, 200) && !native.isPauseMenuActive();
     
-    // Forward/Backward movement (Z/S for AZERTY)
-    if (!isChatOpen && alt.isKeyDown(KEY_Z)) {
+    // Forward/Backward movement (Z/S for AZERTY) - only when game controls enabled
+    if (gameControlsEnabled && alt.isKeyDown(KEY_Z)) {
         newPos.x += forward.x * currentSpeed;
         newPos.y += forward.y * currentSpeed;
         newPos.z += forward.z * currentSpeed;
     }
-    if (!isChatOpen && alt.isKeyDown(KEY_S)) {
+    if (gameControlsEnabled && alt.isKeyDown(KEY_S)) {
         newPos.x -= forward.x * currentSpeed;
         newPos.y -= forward.y * currentSpeed;
         newPos.z -= forward.z * currentSpeed;
     }
     
     // Left/Right movement (Q/D for AZERTY)
-    if (!isChatOpen && alt.isKeyDown(KEY_Q)) {
+    if (gameControlsEnabled && alt.isKeyDown(KEY_Q)) {
         newPos.x -= right.x * currentSpeed;
         newPos.y -= right.y * currentSpeed;
     }
-    if (!isChatOpen && alt.isKeyDown(KEY_D)) {
+    if (gameControlsEnabled && alt.isKeyDown(KEY_D)) {
         newPos.x += right.x * currentSpeed;
         newPos.y += right.y * currentSpeed;
     }
     
-    // Up movement (Shift) - don't trigger when chat is open
-    if (!isChatOpen && alt.isKeyDown(KEY_SHIFT)) {
+    // Up movement (Shift)
+    if (gameControlsEnabled && alt.isKeyDown(KEY_SHIFT)) {
         newPos.z += currentSpeed;
     }
     
-    // Down movement (Ctrl) - don't trigger when chat is open
-    if (!isChatOpen && alt.isKeyDown(KEY_CTRL)) {
+    // Down movement (Ctrl)
+    if (gameControlsEnabled && alt.isKeyDown(KEY_CTRL)) {
         newPos.z -= currentSpeed;
     }
     
@@ -293,11 +298,19 @@ function decreaseFlySpeed() {
 
 /**
  * Handle key press for F10 toggle
+ * Using both keydown and checking via everyTick for F10
  */
+alt.everyTick(() => {
+    // Check F10 using native controls (key 57 is F10 in GTA controls)
+    if (native.isDisabledControlJustPressed(0, 57)) {
+        alt.emitServer(FlyModeEvents.toServer.toggleFly);
+    }
+});
+
+// Backup F10 handler using keydown
 alt.on('keydown', (key: number) => {
     // F10 key - Toggle fly mode (keycode 121)
-    // Also check if chat/console is open to avoid conflicts
-    if (key === KEY_F10 && !alt.isMenuOpen() && !alt.isConsoleOpen()) {
+    if (key === KEY_F10) {
         alt.emitServer(FlyModeEvents.toServer.toggleFly);
     }
 });
