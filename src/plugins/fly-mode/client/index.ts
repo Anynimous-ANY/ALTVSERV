@@ -102,7 +102,7 @@ function flyModeTick() {
         // Freeze player to prevent falling (only if not in vehicle)
         native.freezeEntityPosition(player.scriptID, true);
         
-        // Set Superman flying animation - use fallskydive animation for better Superman pose
+        // Set Superman flying animation
         const animDict = 'move_strafe@stealth';
         const animName = 'idle';
         
