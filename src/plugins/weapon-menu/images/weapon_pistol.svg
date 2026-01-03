@@ -1,9 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100" height="100" fill="#1f2937"/>
-  <g transform="translate(50, 50)">
-    <rect x="-8" y="-3" width="16" height="6" rx="1" fill="#9CA3AF"/>
-    <rect x="8" y="-5" width="12" height="10" rx="2" fill="#6B7280"/>
-    <circle cx="8" cy="0" r="2" fill="#4B5563"/>
-  </g>
-  <text x="50" y="90" font-family="Arial" font-size="8" fill="#9CA3AF" text-anchor="middle">PISTOL</text>
+  <rect width="100" height="100" fill="hsl(230, 20%, 15%)"/>
+  <circle cx="50" cy="40" r="25" fill="hsl(230, 40%, 35%)" opacity="0.6"/>
+  <text x="50" y="48" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="hsl(230, 60%, 70%)" text-anchor="middle">P</text>
+  <text x="50" y="88" font-family="Arial, sans-serif" font-size="7" fill="hsl(230, 30%, 50%)" text-anchor="middle">PISTOL</text>
 </svg>

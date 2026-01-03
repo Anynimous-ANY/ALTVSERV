@@ -43,6 +43,10 @@ watch(searchQuery, (newValue) => {
 
 // Watch for tab changes to load current weapons when switching to modify tab
 watch(currentTab, (newTab) => {
+    // Ensure menu is visible when switching tabs
+    isLoading.value = false;
+    error.value = null;
+    
     if (newTab === 'modify') {
         loadCurrentWeapons();
     }
@@ -340,6 +344,10 @@ function isComponentAttached(componentHash: number): boolean {
 // Handle weapon given event - refresh current weapons list
 function handleWeaponGiven() {
     try {
+        // Ensure menu content is visible
+        isLoading.value = false;
+        error.value = null;
+        
         // Refresh current weapons list after weapon is given
         // Delay allows server to process the weapon addition
         setTimeout(() => {
@@ -384,7 +392,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="fixed left-8 top-1/2 flex h-[600px] w-[400px] -translate-y-1/2 flex-col overflow-hidden rounded-2xl border-2 border-gray-700 bg-gray-900 bg-opacity-95 shadow-2xl" role="dialog" aria-labelledby="weapon-menu-title" aria-modal="true">
+    <div class="fixed left-8 top-1/2 z-50 flex h-[600px] w-[400px] -translate-y-1/2 flex-col overflow-hidden rounded-2xl border-2 border-gray-700 bg-gray-900 bg-opacity-95 shadow-2xl" role="dialog" aria-labelledby="weapon-menu-title" aria-modal="true">
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-gray-700 bg-gray-800 px-4 py-3">
             <h2 id="weapon-menu-title" class="text-xl font-bold text-white">Weapon Menu</h2>
