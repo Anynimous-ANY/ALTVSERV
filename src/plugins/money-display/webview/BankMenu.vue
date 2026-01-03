@@ -85,6 +85,9 @@ onMounted(() => {
     events.on(MoneyEvents.toWebview.updateMoney, updateMoney);
     events.on(MoneyEvents.toWebview.depositResult, handleDepositResult);
     events.on(MoneyEvents.toWebview.withdrawResult, handleWithdrawResult);
+    
+    // Request current money when component mounts
+    events.emitServer(MoneyEvents.toServer.requestMoney);
 });
 
 onUnmounted(() => {

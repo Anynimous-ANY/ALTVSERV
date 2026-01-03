@@ -156,6 +156,16 @@ function handleCloseBank(player: alt.Player) {
     alt.emitClient(player, MoneyEvents.toClient.closeBankMenu);
 }
 
+// Handle money request
+function handleRequestMoney(player: alt.Player) {
+    if (!player || !player.valid) {
+        return;
+    }
+    
+    const currentMoney = getPlayerMoney(player);
+    updatePlayerMoney(player, currentMoney);
+}
+
 // Handle deposit
 async function handleDeposit(player: alt.Player, amount: number) {
     if (!player || !player.valid) {
@@ -234,6 +244,7 @@ alt.onClient(MoneyEvents.toServer.openBank, handleOpenBank);
 alt.onClient(MoneyEvents.toServer.closeBank, handleCloseBank);
 alt.onClient(MoneyEvents.toServer.deposit, handleDeposit);
 alt.onClient(MoneyEvents.toServer.withdraw, handleWithdraw);
+alt.onClient(MoneyEvents.toServer.requestMoney, handleRequestMoney);
 
 // Export API for other plugins
 const API_NAME = 'money-api';

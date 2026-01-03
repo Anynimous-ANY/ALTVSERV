@@ -9,6 +9,7 @@ export const MoneyEvents = {
         closeBank: 'money:toServer:closeBank',
         deposit: 'money:toServer:deposit',
         withdraw: 'money:toServer:withdraw',
+        requestMoney: 'money:toServer:requestMoney',
     },
     toClient: {
         openBankMenu: 'money:toClient:openBankMenu',
