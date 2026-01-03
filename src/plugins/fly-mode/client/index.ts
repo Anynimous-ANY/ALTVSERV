@@ -6,7 +6,6 @@ import { FlyModeEvents } from '../shared/events.js';
 let isFlyModeActive = false;
 let flySpeed = 2.0; // Default speed multiplier (increased from 1.0)
 let flyInterval: number | null = null;
-let savedVehicle: number | null = null; // Store vehicle ID when flying in vehicle
 
 // Speed settings
 const MIN_SPEED = 0.5;
@@ -27,6 +26,9 @@ const CONTROL_WEAPON_WHEEL_NEXT = 14; // Scroll up
 const CONTROL_WEAPON_WHEEL_PREV = 15; // Scroll down
 const CONTROL_SCROLL_UP_ALTERNATE = 241; // Alternative scroll up
 const CONTROL_SCROLL_DOWN_ALTERNATE = 242; // Alternative scroll down
+
+// Animation settings
+const MAX_ANIM_LOAD_ATTEMPTS = 100; // Maximum attempts to load animation dictionary
 
 /**
  * Round fly speed to 1 decimal place
@@ -77,7 +79,7 @@ function flyModeTick() {
             native.requestAnimDict('move_crouch_proto');
             let timeout = 0;
             const animInterval = alt.setInterval(() => {
-                if (native.hasAnimDictLoaded('move_crouch_proto') || timeout > 100) {
+                if (native.hasAnimDictLoaded('move_crouch_proto') || timeout > MAX_ANIM_LOAD_ATTEMPTS) {
                     alt.clearInterval(animInterval);
                     if (native.hasAnimDictLoaded('move_crouch_proto')) {
                         // Play animation that looks like Superman pose
@@ -171,8 +173,6 @@ function enableFlyMode() {
     const vehicle = player.vehicle;
     
     if (vehicle) {
-        // Store vehicle reference
-        savedVehicle = vehicle.scriptID;
         // Disable collision for vehicle
         native.setEntityCollision(vehicle.scriptID, false, false);
         // Freeze vehicle
@@ -223,9 +223,6 @@ function disableFlyMode() {
         // Clear any animations
         native.clearPedTasks(player.scriptID);
     }
-    
-    // Reset saved vehicle
-    savedVehicle = null;
     
     // Stop fly mode tick
     if (flyInterval !== null) {
