@@ -132,7 +132,8 @@ async function handleDeposit(player: alt.Player, amount: number, callback?: (suc
         return;
     }
     
-    // For now, just remove money (in a real scenario, you'd transfer to bank account)
+    // TODO: Implement separate bank account system
+    // For now, just remove money from player (simulating deposit to bank)
     const success = await removePlayerMoney(player, amount);
     
     const rPlayer = Rebar.usePlayer(player);
@@ -155,7 +156,8 @@ async function handleWithdraw(player: alt.Player, amount: number, callback?: (su
         return;
     }
     
-    // For now, just add money (in a real scenario, you'd check bank balance)
+    // TODO: Implement bank balance checking
+    // For now, just add money (simulating withdrawal from bank with unlimited balance)
     const success = await addPlayerMoney(player, amount);
     
     const rPlayer = Rebar.usePlayer(player);

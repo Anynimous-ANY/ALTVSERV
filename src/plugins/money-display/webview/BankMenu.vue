@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useEvents } from '../../../../webview/composables/useEvents';
 import { MoneyEvents } from '../shared/events';
+import { formatMoney } from '../shared/utils';
 
 const events = useEvents();
 const money = ref(0);
@@ -12,15 +13,6 @@ const messageType = ref<'success' | 'error' | ''>('');
 
 function updateMoney(newMoney: number) {
     money.value = newMoney;
-}
-
-function formatMoney(amount: number): string {
-    return new Intl.NumberFormat('fr-FR', {
-        style: 'currency',
-        currency: 'EUR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    }).format(amount);
 }
 
 function showMessage(msg: string, type: 'success' | 'error') {
@@ -43,11 +35,12 @@ function handleDeposit() {
         return;
     }
 
+    const depositAmount = amount.value;
     isProcessing.value = true;
-    events.emitServer(MoneyEvents.toServer.deposit, amount.value, (success: boolean) => {
+    events.emitServer(MoneyEvents.toServer.deposit, depositAmount, (success: boolean) => {
         isProcessing.value = false;
         if (success) {
-            showMessage(`Dépôt de ${formatMoney(amount.value!)} effectué avec succès`, 'success');
+            showMessage(`Dépôt de ${formatMoney(depositAmount)} effectué avec succès`, 'success');
             amount.value = null;
         } else {
             showMessage('Erreur lors du dépôt', 'error');
@@ -61,11 +54,12 @@ function handleWithdraw() {
         return;
     }
 
+    const withdrawAmount = amount.value;
     isProcessing.value = true;
-    events.emitServer(MoneyEvents.toServer.withdraw, amount.value, (success: boolean) => {
+    events.emitServer(MoneyEvents.toServer.withdraw, withdrawAmount, (success: boolean) => {
         isProcessing.value = false;
         if (success) {
-            showMessage(`Retrait de ${formatMoney(amount.value!)} effectué avec succès`, 'success');
+            showMessage(`Retrait de ${formatMoney(withdrawAmount)} effectué avec succès`, 'success');
             amount.value = null;
         } else {
             showMessage('Vous n\'avez pas assez d\'argent en banque', 'error');
