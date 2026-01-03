@@ -18,6 +18,74 @@ function getWeaponName(hash: string): string {
     return weapon ? weapon.name : hash;
 }
 
+// Get component price based on component hash
+function getComponentPrice(componentHash: number): number {
+    // Define pricing based on component type
+    const suppressorHashes = [0x65EA7EBB, 0xC304849A, 0xA73D4664, 0x837445AA, 0x8C8DCC43, 0xA564D78B];
+    const extendedClipHashes = [0xED265A1C, 0xD67B4F2D, 0x249A17D5, 0xD9D3AC92, 0x7B0033B3, 0x64F9C62B];
+    const flashlightHashes = [0x359B7AAE, 0x9D65907A, 0xAF89DCE3];
+    const scopeHashes = [0xBC54DA77, 0x1B4C088B, 0xA0D89C42, 0x3CC6BA57, 0x9BC64089];
+    const gripHashes = [0xC164F53, 0xB1929A4, 0x9D2FBF29];
+    const luxuryFinishHashes = [0xD7391086, 0xC6654D72, 0x9B76C72C, 0x77B8AB2F, 0x80DA5257];
+    
+    if (suppressorHashes.includes(componentHash)) return 5000;
+    if (extendedClipHashes.includes(componentHash)) return 3000;
+    if (flashlightHashes.includes(componentHash)) return 2000;
+    if (scopeHashes.includes(componentHash)) return 8000;
+    if (gripHashes.includes(componentHash)) return 2500;
+    if (luxuryFinishHashes.includes(componentHash)) return 10000;
+    
+    // Default price for other components
+    return 1500;
+}
+
+// Get component name from hash
+function getComponentName(componentHash: number): string {
+    const components: { [key: number]: string } = {
+        0x65EA7EBB: 'Suppressor',
+        0xC304849A: 'Suppressor',
+        0xA73D4664: 'Suppressor',
+        0xED265A1C: 'Extended Clip',
+        0xD67B4F2D: 'Extended Clip',
+        0x249A17D5: 'Extended Clip',
+        0x359B7AAE: 'Flashlight',
+        0xBC54DA77: 'Scope',
+        0xC164F53: 'Grip',
+        0xD7391086: 'Luxury Finish',
+    };
+    return components[componentHash] || `Component ${componentHash.toString(16)}`;
+}
+
+// Get tint price based on tint index
+function getTintPrice(tintIndex: number): number {
+    const tintPrices: { [key: number]: number } = {
+        0: 0,      // Normal - Free
+        1: 500,    // Green
+        2: 2000,   // Gold
+        3: 1500,   // Pink
+        4: 1000,   // Army
+        5: 800,    // LSPD
+        6: 1200,   // Orange
+        7: 5000,   // Platinum
+    };
+    return tintPrices[tintIndex] ?? 0;
+}
+
+// Get tint name from index
+function getTintName(tintIndex: number): string {
+    const tintNames: { [key: number]: string } = {
+        0: 'Normal',
+        1: 'Green',
+        2: 'Gold',
+        3: 'Pink',
+        4: 'Army',
+        5: 'LSPD',
+        6: 'Orange',
+        7: 'Platinum',
+    };
+    return tintNames[tintIndex] ?? `Tint ${tintIndex}`;
+}
+
 // Register the /weapons command
 messenger.commands.register({
     name: 'weapons',
@@ -330,10 +398,42 @@ alt.onClient(WeaponMenuEvents.toServer.setWeaponTint, async (player: alt.Player,
             return;
         }
 
+        // Get tint price
+        const tintPrice = getTintPrice(tintIndex);
+        const tintName = getTintName(tintIndex);
+
+        // Check if tint costs money
+        if (tintPrice > 0) {
+            // Get money API
+            const moneyApi = Rebar.useApi().get('money-api');
+            if (!moneyApi) {
+                rPlayer.notify.showNotification('Money system not available');
+                return;
+            }
+
+            // Check player money
+            const playerMoney = moneyApi.getPlayerMoney(player);
+            if (playerMoney < tintPrice) {
+                rPlayer.notify.showNotification(`Insufficient funds! ${tintName} tint costs ${tintPrice}€, you have ${playerMoney}€`);
+                return;
+            }
+
+            // Deduct money
+            const success = await moneyApi.removePlayerMoney(player, tintPrice);
+            if (!success) {
+                rPlayer.notify.showNotification(`Failed to process payment for ${tintName} tint (${tintPrice}€)`);
+                return;
+            }
+        }
+
         // Set the weapon tint
         player.setWeaponTintIndex(weaponHash, tintIndex);
 
-        rPlayer.notify.showNotification('Weapon tint changed');
+        if (tintPrice > 0) {
+            rPlayer.notify.showNotification(`${tintName} tint applied for ${tintPrice}€`);
+        } else {
+            rPlayer.notify.showNotification(`${tintName} tint applied`);
+        }
 
         // Send updated weapons list using player.weapons array
         const allWeapons: any[] = [];
@@ -452,12 +552,44 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
             return;
         }
 
+        // Get component price
+        const componentPrice = getComponentPrice(componentHash);
+        const componentName = getComponentName(componentHash);
+
+        // Check if component costs money
+        if (componentPrice > 0) {
+            // Get money API
+            const moneyApi = Rebar.useApi().get('money-api');
+            if (!moneyApi) {
+                rPlayer.notify.showNotification('Money system not available');
+                return;
+            }
+
+            // Check player money
+            const playerMoney = moneyApi.getPlayerMoney(player);
+            if (playerMoney < componentPrice) {
+                rPlayer.notify.showNotification(`Insufficient funds! ${componentName} costs ${componentPrice}€, you have ${playerMoney}€`);
+                return;
+            }
+
+            // Deduct money
+            const success = await moneyApi.removePlayerMoney(player, componentPrice);
+            if (!success) {
+                rPlayer.notify.showNotification(`Failed to process payment for ${componentName} (${componentPrice}€)`);
+                return;
+            }
+        }
+
         // Simply add the component using native method
         // The game engine handles all visual updates and persistence
         player.addWeaponComponent(weaponHash, componentHash);
         console.log(`[WeaponMenu] Component ${componentHash} added to weapon ${weaponHash}`);
 
-        rPlayer.notify.showNotification('Component added');
+        if (componentPrice > 0) {
+            rPlayer.notify.showNotification(`${componentName} added for ${componentPrice}€`);
+        } else {
+            rPlayer.notify.showNotification(`${componentName} added`);
+        }
 
         // Send updated weapons list
         const allWeapons: any[] = [];

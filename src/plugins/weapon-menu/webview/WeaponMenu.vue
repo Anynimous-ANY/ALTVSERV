@@ -363,6 +363,22 @@ function handleWeaponGiven() {
     }
 }
 
+function handleInputFocus() {
+    try {
+        events.emitClient('weaponmenu:inputFocused');
+    } catch (err) {
+        console.error('Error handling input focus:', err);
+    }
+}
+
+function handleInputBlur() {
+    try {
+        events.emitClient('weaponmenu:inputBlurred');
+    } catch (err) {
+        console.error('Error handling input blur:', err);
+    }
+}
+
 onMounted(() => {
     try {
         if (!events) {
@@ -419,6 +435,8 @@ onUnmounted(() => {
                 placeholder="Search weapons..."
                 class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-white placeholder-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 aria-label="Search weapons"
+                @focus="handleInputFocus"
+                @blur="handleInputBlur"
             />
         </div>
 

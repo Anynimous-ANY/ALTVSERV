@@ -8,6 +8,9 @@ import { WEAPONS } from '../shared/weapons.js';
 const Rebar = useRebarClient();
 const webview = Rebar.webview.useWebview();
 
+// Track if input is focused (typing in search bar)
+let isInputFocused = false;
+
 // Validate weapon hash
 function isValidWeaponHash(hash: string): boolean {
     if (!hash || typeof hash !== 'string') {
@@ -15,6 +18,15 @@ function isValidWeaponHash(hash: string): boolean {
     }
     return WEAPONS.some((weapon) => weapon.hash === hash);
 }
+
+// Listen for input focus events from webview
+webview.on('weaponmenu:inputFocused', () => {
+    isInputFocused = true;
+});
+
+webview.on('weaponmenu:inputBlurred', () => {
+    isInputFocused = false;
+});
 
 // Tick function to disable controls every frame while menu is open
 // This runs every frame and checks if the menu is open
@@ -24,7 +36,7 @@ alt.everyTick(() => {
         return;
     }
 
-    // Disable specific controls but allow movement and vehicle controls
+    // Disable specific controls but allow movement and vehicle controls (unless typing)
     // Disable attack controls
     native.disableControlAction(0, 24, true); // INPUT_ATTACK
     native.disableControlAction(0, 25, true); // INPUT_AIM
@@ -44,8 +56,19 @@ alt.everyTick(() => {
     native.disableControlAction(0, 199, true); // INPUT_FRONTEND_PAUSE (P key - pause menu)
     native.disableControlAction(0, 0, true); // INPUT_NEXT_CAMERA (V key - camera view)
     
+    // Disable weapon wheel
+    native.disableControlAction(0, 14, true); // INPUT_SELECT_NEXT_WEAPON
+    native.disableControlAction(0, 15, true); // INPUT_SELECT_PREV_WEAPON
+    
     // Disable other menu-related controls
     native.disableControlAction(0, 56, true); // INPUT_SPRINT
+    
+    // Disable vehicle radio/music controls
+    native.disableControlAction(0, 85, true); // INPUT_VEH_RADIO_WHEEL
+    native.disableControlAction(0, 82, true); // INPUT_VEH_NEXT_RADIO
+    native.disableControlAction(0, 83, true); // INPUT_VEH_PREV_RADIO
+    native.disableControlAction(0, 84, true); // INPUT_VEH_NEXT_RADIO_TRACK
+    native.disableControlAction(0, 19, true); // INPUT_CHARACTER_WHEEL (also disables vehicle wheel)
     
     // Lock camera rotation (prevent right-click camera movement)
     native.disableControlAction(0, 1, true); // INPUT_LOOK_LR (Look Left/Right)
@@ -55,12 +78,34 @@ alt.everyTick(() => {
     native.disableControlAction(0, 5, true); // INPUT_LOOK_LEFT_ONLY
     native.disableControlAction(0, 6, true); // INPUT_LOOK_RIGHT_ONLY
     
-    // Allow movement controls - these are explicitly NOT disabled:
+    // If input is focused (typing), disable ALL movement and vehicle controls
+    if (isInputFocused) {
+        // Disable walking/running
+        native.disableControlAction(0, 30, true); // INPUT_MOVE_LR
+        native.disableControlAction(0, 31, true); // INPUT_MOVE_UD
+        native.disableControlAction(0, 32, true); // INPUT_MOVE_UP_ONLY
+        native.disableControlAction(0, 33, true); // INPUT_MOVE_DOWN_ONLY
+        native.disableControlAction(0, 34, true); // INPUT_MOVE_LEFT_ONLY
+        native.disableControlAction(0, 35, true); // INPUT_MOVE_RIGHT_ONLY
+        native.disableControlAction(0, 21, true); // INPUT_SPRINT
+        native.disableControlAction(0, 22, true); // INPUT_JUMP
+        
+        // Disable vehicle controls
+        native.disableControlAction(0, 59, true); // INPUT_VEH_MOVE_LR
+        native.disableControlAction(0, 60, true); // INPUT_VEH_MOVE_UD
+        native.disableControlAction(0, 71, true); // INPUT_VEH_ACCELERATE
+        native.disableControlAction(0, 72, true); // INPUT_VEH_BRAKE
+        native.disableControlAction(0, 63, true); // INPUT_VEH_STEER_LEFT
+        native.disableControlAction(0, 64, true); // INPUT_VEH_STEER_RIGHT
+        native.disableControlAction(0, 76, true); // INPUT_VEH_HANDBRAKE
+    }
+    
+    // If not typing, allow movement controls explicitly:
     // INPUT_MOVE_LR (30), INPUT_MOVE_UD (31) - walking/running
     // INPUT_MOVE_UP_ONLY (32), INPUT_MOVE_DOWN_ONLY (33)
     // INPUT_MOVE_LEFT_ONLY (34), INPUT_MOVE_RIGHT_ONLY (35)
     
-    // Allow vehicle controls - these are explicitly NOT disabled:
+    // Allow vehicle controls when not typing:
     // INPUT_VEH_MOVE_LR (59), INPUT_VEH_MOVE_UD (60)
     // INPUT_VEH_ACCELERATE (71), INPUT_VEH_BRAKE (72)
     // INPUT_VEH_STEER_LEFT (63), INPUT_VEH_STEER_RIGHT (64)
