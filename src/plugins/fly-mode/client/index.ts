@@ -303,6 +303,11 @@ function decreaseFlySpeed() {
 alt.on('keydown', (key: number) => {
     // F10 key - Toggle fly mode (keycode 121)
     if (key === KEY_F10) {
+        // Don't process F10 when chat/console is open
+        if (alt.isMenuOpen() || alt.isConsoleOpen()) {
+            return;
+        }
+        
         const now = Date.now();
         if (now - lastF10Press > F10_DEBOUNCE_MS) {
             lastF10Press = now;
