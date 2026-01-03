@@ -7,36 +7,52 @@ const webview = Rebar.webview.useWebview();
 
 // Handle bank menu open from server
 function handleOpenBankMenu() {
-    // Focus webview for bank menu
-    webview.focus();
-    
-    // Disable game controls
-    alt.toggleGameControls(false);
+    try {
+        // Focus webview for bank menu
+        webview.focus();
+        
+        // Disable game controls
+        alt.toggleGameControls(false);
+    } catch (error) {
+        console.error('[Money Display Client] Error opening bank menu:', error);
+        // Try to recover by re-enabling controls
+        alt.toggleGameControls(true);
+    }
 }
 
 // Handle bank menu close from server
 function handleCloseBankMenu() {
-    // Unfocus webview
-    webview.unfocus();
-    
-    // Enable game controls
-    alt.toggleGameControls(true);
+    try {
+        // Unfocus webview
+        webview.unfocus();
+        
+        // Enable game controls
+        alt.toggleGameControls(true);
+    } catch (error) {
+        console.error('[Money Display Client] Error closing bank menu:', error);
+        // Always ensure controls are enabled
+        alt.toggleGameControls(true);
+    }
 }
 
 // Handle ESC key to close bank menu
 alt.on('keyup', (key: number) => {
-    // ESC key
-    if (key !== 27) {
-        return;
+    try {
+        // ESC key
+        if (key !== 27) {
+            return;
+        }
+        
+        // Check if bank menu is open
+        if (!webview.isPageOpen('BankMenu')) {
+            return;
+        }
+        
+        // Close bank menu
+        alt.emitServer(MoneyEvents.toServer.closeBank);
+    } catch (error) {
+        console.error('[Money Display Client] Error handling ESC key:', error);
     }
-    
-    // Check if bank menu is open
-    if (!webview.isPageOpen('BankMenu')) {
-        return;
-    }
-    
-    // Close bank menu
-    alt.emitServer(MoneyEvents.toServer.closeBank);
 });
 
 // Register client events

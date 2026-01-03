@@ -10,15 +10,27 @@ const MONEY_KEY = 'money';
 
 // Initialize player money display
 function initPlayerMoney(player: alt.Player) {
+    if (!player || !player.valid) {
+        return;
+    }
+
     const rPlayer = Rebar.usePlayer(player);
     const document = rPlayer.character.get();
     
     if (!document) {
+        console.warn(`[Money Display] Character document not found for player ${player.name}`);
         return;
     }
 
     // Get current money or set to 0 if not exists
     const currentMoney = document[MONEY_KEY] ?? 0;
+    
+    // Initialize money in database if not set
+    if (typeof document[MONEY_KEY] === 'undefined') {
+        rPlayer.character.set(MONEY_KEY, 0).catch((err) => {
+            console.error(`[Money Display] Failed to initialize money for player ${player.name}:`, err);
+        });
+    }
     
     // Show the money display overlay
     Rebar.player.useWebview(player).show('MoneyDisplay', 'overlay');
@@ -29,11 +41,22 @@ function initPlayerMoney(player: alt.Player) {
 
 // Update player money in webview
 function updatePlayerMoney(player: alt.Player, amount: number) {
-    Rebar.player.useWebview(player).emit(MoneyEvents.toWebview.updateMoney, amount);
+    if (!player || !player.valid) {
+        return;
+    }
+    
+    // Ensure amount is a valid number
+    const validAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
+    
+    Rebar.player.useWebview(player).emit(MoneyEvents.toWebview.updateMoney, validAmount);
 }
 
 // Get player money
 function getPlayerMoney(player: alt.Player): number {
+    if (!player || !player.valid) {
+        return 0;
+    }
+
     const rPlayer = Rebar.usePlayer(player);
     const document = rPlayer.character.get();
     
@@ -41,28 +64,39 @@ function getPlayerMoney(player: alt.Player): number {
         return 0;
     }
     
-    return document[MONEY_KEY] ?? 0;
+    const money = document[MONEY_KEY];
+    return typeof money === 'number' && !isNaN(money) ? money : 0;
 }
 
 // Set player money
 async function setPlayerMoney(player: alt.Player, amount: number): Promise<boolean> {
+    if (!player || !player.valid) {
+        return false;
+    }
+
     const rPlayer = Rebar.usePlayer(player);
     const document = rPlayer.character.get();
     
     if (!document) {
+        console.warn(`[Money Display] Cannot set money: Character document not found for player ${player.name}`);
         return false;
     }
     
-    // Ensure amount is not negative
-    const newAmount = Math.max(0, amount);
+    // Ensure amount is not negative and is a valid number
+    const newAmount = Math.max(0, typeof amount === 'number' && !isNaN(amount) ? amount : 0);
     
-    // Update in database
-    await rPlayer.character.set(MONEY_KEY, newAmount);
-    
-    // Update webview
-    updatePlayerMoney(player, newAmount);
-    
-    return true;
+    try {
+        // Update in database
+        await rPlayer.character.set(MONEY_KEY, newAmount);
+        
+        // Update webview
+        updatePlayerMoney(player, newAmount);
+        
+        return true;
+    } catch (error) {
+        console.error(`[Money Display] Failed to set money for player ${player.name}:`, error);
+        return false;
+    }
 }
 
 // Add money to player
@@ -84,10 +118,15 @@ async function removePlayerMoney(player: alt.Player, amount: number): Promise<bo
 
 // Handle bank menu open
 function handleOpenBank(player: alt.Player) {
+    if (!player || !player.valid) {
+        return;
+    }
+
     const rPlayer = Rebar.usePlayer(player);
     const document = rPlayer.character.get();
     
     if (!document) {
+        rPlayer.notify.showNotification('Erreur: Personnage non chargé');
         return;
     }
     
@@ -106,6 +145,10 @@ function handleOpenBank(player: alt.Player) {
 
 // Handle bank menu close
 function handleCloseBank(player: alt.Player) {
+    if (!player || !player.valid) {
+        return;
+    }
+
     // Hide bank menu
     Rebar.player.useWebview(player).hide('BankMenu');
     
@@ -116,11 +159,16 @@ function handleCloseBank(player: alt.Player) {
 // Handle deposit
 async function handleDeposit(player: alt.Player, amount: number, callback?: (success: boolean) => void) {
     if (!callback) {
-        console.error('Callback missing on deposit event');
+        console.error('[Money Display] Callback missing on deposit event');
         return;
     }
     
-    if (amount <= 0) {
+    if (!player || !player.valid) {
+        callback(false);
+        return;
+    }
+    
+    if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
         callback(false);
         return;
     }
@@ -147,11 +195,16 @@ async function handleDeposit(player: alt.Player, amount: number, callback?: (suc
 // Handle withdraw
 async function handleWithdraw(player: alt.Player, amount: number, callback?: (success: boolean) => void) {
     if (!callback) {
-        console.error('Callback missing on withdraw event');
+        console.error('[Money Display] Callback missing on withdraw event');
         return;
     }
     
-    if (amount <= 0) {
+    if (!player || !player.valid) {
+        callback(false);
+        return;
+    }
+    
+    if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
         callback(false);
         return;
     }
