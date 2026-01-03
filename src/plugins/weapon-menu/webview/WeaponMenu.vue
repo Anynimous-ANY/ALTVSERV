@@ -139,7 +139,7 @@ function getWeaponImage(weapon: Weapon | any): string {
 // Fallback to placeholder if image fails to load
 function handleImageError(event: Event) {
     const img = event.target as HTMLImageElement;
-    img.src = '/images/weapons/placeholder.png';
+    img.src = '/images/weapons/placeholder.svg';
 }
 
 function setFavorites(favs: string[] | null) {

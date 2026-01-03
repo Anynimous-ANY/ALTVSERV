@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" fill="#374151"/>
+  <g transform="translate(50, 50)">
+    <circle cx="0" cy="-10" r="3" fill="#9CA3AF"/>
+    <rect x="-15" y="-5" width="30" height="8" rx="2" fill="#9CA3AF"/>
+    <rect x="-3" y="3" width="6" height="12" rx="1" fill="#9CA3AF"/>
+  </g>
+  <text x="50" y="85" font-family="Arial" font-size="10" fill="#6B7280" text-anchor="middle">NO IMAGE</text>
+</svg>
