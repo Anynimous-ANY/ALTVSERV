@@ -61,6 +61,9 @@ function flyModeTick() {
 
     const player = alt.Player.local;
     
+    // Get camera direction once per frame
+    const camRot = native.getGameplayCamRot(2);
+    
     // Disable weapon wheel controls when in fly mode - all control IDs to ensure it's fully disabled
     native.disableControlAction(0, CONTROL_WEAPON_WHEEL_NEXT, true);
     native.disableControlAction(0, CONTROL_WEAPON_WHEEL_PREV, true);
@@ -123,15 +126,13 @@ function flyModeTick() {
         }
         
         // Set player heading to match camera rotation
-        const camRot = native.getGameplayCamRot(2);
         native.setEntityHeading(player.scriptID, camRot.z);
     } else {
         // Freeze vehicle when flying
         native.freezeEntityPosition(vehicle.scriptID, true);
     }
     
-    // Get camera direction
-    const camRot = native.getGameplayCamRot(2);
+    // Calculate forward direction from camera
     
     // Calculate forward direction from camera
     const rotZ = (camRot.z * Math.PI) / 180;
