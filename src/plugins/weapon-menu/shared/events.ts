@@ -15,6 +15,7 @@ export const WeaponMenuEvents = {
         close: 'weaponmenu:webview:close',
         setFavorites: 'weaponmenu:webview:setfavorites',
         setCurrentWeapons: 'weaponmenu:webview:setcurrentweapons',
+        weaponGiven: 'weaponmenu:webview:weapongiven',
     },
     toClient: {
         open: 'weaponmenu:client:open',

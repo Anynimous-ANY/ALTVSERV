@@ -94,6 +94,13 @@ function selectWeapon(weapon: Weapon) {
     try {
         selectedWeapon.value = weapon;
         events.emitServer(WeaponMenuEvents.toServer.giveWeapon, weapon.hash);
+        
+        // Refresh current weapons list after a short delay to allow server to process
+        setTimeout(() => {
+            if (currentTab.value === 'modify') {
+                loadCurrentWeapons();
+            }
+        }, 500);
     } catch (err) {
         console.error('Error selecting weapon:', err);
         error.value = 'Failed to select weapon';
@@ -333,6 +340,18 @@ function isComponentAttached(componentHash: number): boolean {
     return selectedModifyWeapon.value.components.includes(componentHash);
 }
 
+// Handle weapon given event - refresh current weapons if on modify tab
+function handleWeaponGiven(weaponHash: string) {
+    try {
+        // Refresh current weapons list after weapon is given
+        setTimeout(() => {
+            loadCurrentWeapons();
+        }, 300);
+    } catch (err) {
+        console.error('Error handling weapon given:', err);
+    }
+}
+
 onMounted(() => {
     try {
         if (!events) {
@@ -344,6 +363,7 @@ onMounted(() => {
         events.on(WeaponMenuEvents.toWebview.setCurrentWeapons, setCurrentWeapons);
         events.on(WeaponMenuEvents.toWebview.open, handleOpen);
         events.on(WeaponMenuEvents.toWebview.close, handleClose);
+        events.on(WeaponMenuEvents.toWebview.weaponGiven, handleWeaponGiven);
         events.emitServer(WeaponMenuEvents.toServer.getFavorites);
     } catch (err) {
         console.error('Error in onMounted:', err);

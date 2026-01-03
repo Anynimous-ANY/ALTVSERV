@@ -104,6 +104,10 @@ alt.onClient(WeaponMenuEvents.toServer.giveWeapon, (player: alt.Player, weaponHa
                     // Give weapon to player with appropriate ammo
                     player.giveWeapon(alt.hash(weaponHash), ammo, true);
                     rPlayer.notify.showNotification(`${weaponName} purchased for ${price}€!`);
+                    
+                    // Notify webview that weapon was given
+                    const webview = Rebar.player.useWebview(player);
+                    webview.emit(WeaponMenuEvents.toWebview.weaponGiven, weaponHash);
                 })
                 .catch((error: any) => {
                     console.error('Error processing payment:', error);
@@ -113,6 +117,10 @@ alt.onClient(WeaponMenuEvents.toServer.giveWeapon, (player: alt.Player, weaponHa
             // Free weapon
             player.giveWeapon(alt.hash(weaponHash), ammo, true);
             rPlayer.notify.showNotification(`${weaponName} received!`);
+            
+            // Notify webview that weapon was given
+            const webview = Rebar.player.useWebview(player);
+            webview.emit(WeaponMenuEvents.toWebview.weaponGiven, weaponHash);
         }
     } catch (error) {
         console.error('Error giving weapon:', error);
