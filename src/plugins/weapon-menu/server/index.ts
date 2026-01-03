@@ -67,15 +67,51 @@ alt.onClient(WeaponMenuEvents.toServer.giveWeapon, (player: alt.Player, weaponHa
             return;
         }
 
-        // Get weapon data for ammo
+        // Get weapon data for ammo and price
         const weaponData = WEAPONS.find((w) => w.hash === weaponHash);
-        const ammo = weaponData?.ammo ?? 999;
+        if (!weaponData) {
+            return;
+        }
 
-        // Give weapon to player with appropriate ammo
-        player.giveWeapon(alt.hash(weaponHash), ammo, true);
+        const ammo = weaponData.ammo ?? 999;
+        const price = weaponData.price ?? 0;
 
-        const weaponName = getWeaponName(weaponHash);
-        rPlayer.notify.showNotification(`${weaponName} received!`);
+        // Check if weapon costs money
+        if (price > 0) {
+            // Get money API
+            const moneyApi = Rebar.useApi().get('money-api');
+            if (!moneyApi) {
+                rPlayer.notify.showNotification('Money system not available');
+                return;
+            }
+
+            // Check player money
+            const playerMoney = moneyApi.getPlayerMoney(player);
+            if (playerMoney < price) {
+                rPlayer.notify.showNotification(`Insufficient funds! Need ${price}€, you have ${playerMoney}€`);
+                return;
+            }
+
+            // Deduct money
+            moneyApi.removePlayerMoney(player, price).then((success: boolean) => {
+                if (!success) {
+                    rPlayer.notify.showNotification('Failed to process payment');
+                    return;
+                }
+
+                // Give weapon to player with appropriate ammo
+                player.giveWeapon(alt.hash(weaponHash), ammo, true);
+
+                const weaponName = getWeaponName(weaponHash);
+                rPlayer.notify.showNotification(`${weaponName} purchased for ${price}€!`);
+            });
+        } else {
+            // Free weapon
+            player.giveWeapon(alt.hash(weaponHash), ammo, true);
+
+            const weaponName = getWeaponName(weaponHash);
+            rPlayer.notify.showNotification(`${weaponName} received!`);
+        }
     } catch (error) {
         console.error('Error giving weapon:', error);
     }

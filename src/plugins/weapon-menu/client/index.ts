@@ -24,14 +24,43 @@ alt.everyTick(() => {
         return;
     }
 
-    // Disable ALL control actions to prevent any GTA controls from triggering
-    // This includes camera, movement, attacks, menus, vehicle controls, etc.
-    // Using disableAllControlActions is more comprehensive than listing individual controls
-    native.disableAllControlActions(0);
+    // Disable specific controls but allow movement and vehicle controls
+    // Disable attack controls
+    native.disableControlAction(0, 24, true); // INPUT_ATTACK
+    native.disableControlAction(0, 25, true); // INPUT_AIM
+    native.disableControlAction(0, 37, true); // INPUT_SELECT_WEAPON
+    native.disableControlAction(0, 140, true); // INPUT_MELEE_ATTACK_LIGHT
+    native.disableControlAction(0, 141, true); // INPUT_MELEE_ATTACK_HEAVY
+    native.disableControlAction(0, 142, true); // INPUT_MELEE_ATTACK_ALTERNATE
+    native.disableControlAction(0, 257, true); // INPUT_ATTACK2
+    native.disableControlAction(0, 263, true); // INPUT_MELEE_ATTACK1
+    native.disableControlAction(0, 264, true); // INPUT_MELEE_ATTACK2
     
-    // Also disable control group 1 and 2 for additional coverage
-    native.disableAllControlActions(1);
-    native.disableAllControlActions(2);
+    // Disable phone and radio wheel
+    native.disableControlAction(0, 27, true); // INPUT_PHONE
+    native.disableControlAction(0, 19, true); // INPUT_CHARACTER_WHEEL
+    
+    // Disable other menu-related controls
+    native.disableControlAction(0, 56, true); // INPUT_SPRINT
+    native.disableControlAction(0, 25, true); // INPUT_AIM (already disabled above but ensuring)
+    
+    // Lock camera rotation (prevent right-click camera movement)
+    native.disableControlAction(0, 1, true); // INPUT_LOOK_LR (Look Left/Right)
+    native.disableControlAction(0, 2, true); // INPUT_LOOK_UD (Look Up/Down)
+    native.disableControlAction(0, 3, true); // INPUT_LOOK_UP_ONLY
+    native.disableControlAction(0, 4, true); // INPUT_LOOK_DOWN_ONLY
+    native.disableControlAction(0, 5, true); // INPUT_LOOK_LEFT_ONLY
+    native.disableControlAction(0, 6, true); // INPUT_LOOK_RIGHT_ONLY
+    
+    // Allow movement controls - these are explicitly NOT disabled:
+    // INPUT_MOVE_LR (30), INPUT_MOVE_UD (31) - walking/running
+    // INPUT_MOVE_UP_ONLY (32), INPUT_MOVE_DOWN_ONLY (33)
+    // INPUT_MOVE_LEFT_ONLY (34), INPUT_MOVE_RIGHT_ONLY (35)
+    
+    // Allow vehicle controls - these are explicitly NOT disabled:
+    // INPUT_VEH_MOVE_LR (59), INPUT_VEH_MOVE_UD (60)
+    // INPUT_VEH_ACCELERATE (71), INPUT_VEH_BRAKE (72)
+    // INPUT_VEH_STEER_LEFT (63), INPUT_VEH_STEER_RIGHT (64)
 });
 
 // Handle key press for closing the menu

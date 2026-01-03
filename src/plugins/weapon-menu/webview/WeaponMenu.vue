@@ -130,6 +130,18 @@ function isFavorite(weapon: Weapon): boolean {
     return favorites.value.includes(weapon.hash);
 }
 
+// Get weapon image path
+function getWeaponImage(weapon: Weapon | any): string {
+    const imageName = weapon.image || weapon.hash?.replace('weapon_', '') + '.png' || 'default.png';
+    return `/images/weapons/${imageName}`;
+}
+
+// Fallback to placeholder if image fails to load
+function handleImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.src = '/images/weapons/placeholder.png';
+}
+
 function setFavorites(favs: string[] | null) {
     try {
         if (!favs || !Array.isArray(favs)) {
@@ -408,17 +420,33 @@ onUnmounted(() => {
                             v-for="weapon in weapons"
                             :key="weapon.hash"
                             @click="selectWeapon(weapon)"
-                            class="flex cursor-pointer items-center justify-between rounded-lg bg-gray-800 px-4 py-3 transition hover:bg-gray-700 focus-within:ring-2 focus-within:ring-blue-500"
+                            class="flex cursor-pointer items-center gap-3 rounded-lg bg-gray-800 px-4 py-3 transition hover:bg-gray-700 focus-within:ring-2 focus-within:ring-blue-500"
                             :class="selectedWeapon?.hash === weapon.hash ? 'ring-2 ring-blue-500' : ''"
                             role="listitem"
                             tabindex="0"
                             @keydown.enter="selectWeapon(weapon)"
                             @keydown.space.prevent="selectWeapon(weapon)"
                         >
+                            <!-- Weapon Image -->
+                            <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-700">
+                                <img 
+                                    :src="getWeaponImage(weapon)" 
+                                    :alt="weapon.name"
+                                    @error="handleImageError"
+                                    class="h-full w-full object-contain"
+                                />
+                            </div>
+                            
+                            <!-- Weapon Info -->
                             <div class="flex-1">
                                 <p class="font-semibold text-white">{{ weapon.name }}</p>
-                                <p class="text-xs text-gray-400">{{ weapon.hash }}</p>
+                                <div class="flex items-center gap-2 text-xs">
+                                    <span class="text-gray-400">{{ weapon.hash }}</span>
+                                    <span class="font-bold text-green-400">{{ weapon.price > 0 ? `${weapon.price}€` : 'FREE' }}</span>
+                                </div>
                             </div>
+                            
+                            <!-- Favorite Button -->
                             <button
                                 @click="toggleFavorite(weapon, $event)"
                                 class="ml-2 text-2xl transition focus:outline-none focus:ring-2 focus:ring-yellow-500"
@@ -451,11 +479,24 @@ onUnmounted(() => {
                         v-for="weapon in currentWeapons"
                         :key="weapon.hash"
                         @click="selectModifyWeapon(weapon)"
-                        class="cursor-pointer rounded-lg bg-gray-800 px-3 py-2 transition hover:bg-gray-700"
+                        class="flex cursor-pointer items-center gap-2 rounded-lg bg-gray-800 px-3 py-2 transition hover:bg-gray-700"
                         :class="selectedModifyWeapon?.hash === weapon.hash ? 'ring-2 ring-blue-500' : ''"
                     >
-                        <p class="text-sm font-semibold text-white">{{ weapon.name || getWeaponName(weapon) }}</p>
-                        <p class="text-xs text-gray-400">Ammo: {{ weapon.ammo }}</p>
+                        <!-- Weapon Image -->
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-700">
+                            <img 
+                                :src="getWeaponImage(weapon)" 
+                                :alt="weapon.name"
+                                @error="handleImageError"
+                                class="h-full w-full object-contain"
+                            />
+                        </div>
+                        
+                        <!-- Weapon Info -->
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-white">{{ weapon.name || getWeaponName(weapon) }}</p>
+                            <p class="text-xs text-gray-400">Ammo: {{ weapon.ammo }}</p>
+                        </div>
                     </div>
                 </div>
                 <div v-else class="flex h-32 items-center justify-center">
@@ -466,6 +507,16 @@ onUnmounted(() => {
             <!-- Modification Panel -->
             <div class="w-1/2 overflow-y-auto p-4">
                 <div v-if="selectedModifyWeapon">
+                    <!-- Weapon Image -->
+                    <div class="mb-4 flex h-24 w-full items-center justify-center overflow-hidden rounded-lg bg-gray-700">
+                        <img 
+                            :src="getWeaponImage(selectedModifyWeapon)" 
+                            :alt="selectedModifyWeapon.name"
+                            @error="handleImageError"
+                            class="h-full w-auto object-contain"
+                        />
+                    </div>
+                    
                     <h3 class="mb-3 text-sm font-bold text-white">{{ selectedModifyWeapon.name || getWeaponName(selectedModifyWeapon) }}</h3>
                     
                     <!-- Tint Selection -->
@@ -558,7 +609,7 @@ onUnmounted(() => {
 
         <!-- Footer Info -->
         <div class="border-t border-gray-700 bg-gray-800 px-4 py-2 text-center text-xs text-gray-400">
-            Press ESC to close | Click weapon to select | Click star to favorite
+            ESC to close | You can walk/drive while menu is open | Click weapon to buy | ⭐ to favorite
         </div>
     </div>
 </template>
