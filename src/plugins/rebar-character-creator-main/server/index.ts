@@ -30,7 +30,6 @@ async function saveAppearance(player: alt.Player, appearance: Appearance) {
         player.kick(t('character.creator.unable.to.save'));
         return;
     }
-
     const characterDoc = Rebar.document.character.useCharacter(player);
     if (!characterDoc) {
         player.kick(t('character.creator.unable.to.save'));

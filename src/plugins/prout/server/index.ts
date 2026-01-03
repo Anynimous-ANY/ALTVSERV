@@ -1,4 +1,5 @@
 import * as alt from 'alt-server';
+import * as natives from 'natives';
 import { useRebar } from '@Server/index.js';
 
 const Rebar = useRebar();
@@ -109,3 +110,16 @@ Messenger.commands.register({
         },
 });
 
+Messenger.commands.register({
+    name: 'medit',
+    desc: '- this make you meditate on your pityful life',
+    callback: async (player, stop) => {
+        const rPlayer = Rebar.usePlayer(player);
+        const native = Rebar.player.useNative(player);
+        if (stop === 'stop' || stop === 'true') {
+           rPlayer.animation.clear();
+        } else {
+            await rPlayer.animation.playInfinite('rcmcollect_paperleadinout@meditiate_idle', 'meditiate_idle', 1, 2500);
+        }
+    }
+});
