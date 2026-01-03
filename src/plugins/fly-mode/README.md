@@ -8,6 +8,8 @@ A fly/noclip plugin for alt:V servers using ReBar framework. Allows admin users 
 - ⌨️ **F10 Toggle**: Quick toggle fly mode on/off with F10 key
 - 🎮 **Command Support**: `/fly` command for toggling fly mode
 - 🔧 **Speed Control**: Adjust fly speed with mouse wheel (scroll up/down)
+- 🚗 **Vehicle Support**: Fly while in vehicles and keep vehicle when disabling fly mode
+- 👤 **Visible Character**: Character remains visible with Superman-like flying pose
 - 🔐 **Admin Only**: Requires admin permission to use
 
 ## Usage
@@ -16,21 +18,25 @@ A fly/noclip plugin for alt:V servers using ReBar framework. Allows admin users 
 
 - `/fly` - Toggle fly mode on/off (requires admin permission)
 
-### Keybinds
+### Keybinds (AZERTY Layout)
 
 - **F10** - Toggle fly mode on/off
-- **W/A/S/D** - Move forward/left/backward/right
-- **Space** - Move up
-- **Shift** - Move down
+- **Z/Q/S/D** - Move forward/left/backward/right (AZERTY layout)
+- **Shift** - Move up
+- **Ctrl** - Move down
 - **Mouse Wheel Up** - Increase fly speed
 - **Mouse Wheel Down** - Decrease fly speed
 
 ### Speed Control
 
-- Default speed: 1.0x
-- Minimum speed: 0.1x
-- Maximum speed: 10.0x
-- Speed increment: 0.2x per scroll
+- Default speed: 2.0x
+- Minimum speed: 0.5x
+- Maximum speed: 50.0x
+- Speed increment: 1.0x per scroll
+
+### Vehicle Flying
+
+You can activate fly mode while in a vehicle. The vehicle will fly with you and remain with you when you disable fly mode.
 
 ## Installation
 
@@ -68,10 +74,30 @@ src/plugins/fly-mode/
 - `flymode:setFlyMode` - Enable/disable fly mode
 - `flymode:updateSpeed` - Update speed value
 
+## Features
+
+### AZERTY Keyboard Layout
+The plugin uses AZERTY keyboard layout:
+- Z: Forward
+- S: Backward
+- Q: Left
+- D: Right
+- Shift: Up
+- Ctrl: Down
+
+### Character Visibility
+Your character remains visible while flying and will be positioned in a Superman-like flying pose.
+
+### Vehicle Support
+You can fly in vehicles! When you enable fly mode while in a vehicle, the vehicle will fly with you. When you disable fly mode, you'll keep the vehicle and remain seated inside.
+
+### Mouse Wheel Speed Control
+The mouse wheel is dedicated to speed control when in fly mode. The weapon wheel is disabled to prevent conflicts.
+
 ## Troubleshooting
 
 ### Player not moving while flying
-- Make sure you're using WASD keys and not arrow keys
+- Make sure you're using ZQSD keys for AZERTY layout
 - Check that fly mode is actually enabled (you should see a notification)
 - Try toggling fly mode off and on again
 

@@ -4,21 +4,22 @@ import { FlyModeEvents } from '../shared/events.js';
 
 // Fly mode state
 let isFlyModeActive = false;
-let flySpeed = 1.0; // Default speed multiplier
+let flySpeed = 2.0; // Default speed multiplier (increased from 1.0)
 let flyInterval: number | null = null;
+let savedVehicle: number | null = null; // Store vehicle ID when flying in vehicle
 
 // Speed settings
-const MIN_SPEED = 0.1;
-const MAX_SPEED = 10.0;
-const SPEED_INCREMENT = 0.2;
+const MIN_SPEED = 0.5;
+const MAX_SPEED = 50.0; // Increased from 10.0 for much faster speeds
+const SPEED_INCREMENT = 1.0; // Increased from 0.2 for faster speed changes
 
-// Control keys
-const KEY_W = 87;
-const KEY_S = 83;
-const KEY_A = 65;
-const KEY_D = 68;
-const KEY_SPACE = 32;
-const KEY_SHIFT = 16;
+// Control keys (AZERTY layout)
+const KEY_Z = 90; // Forward (was W)
+const KEY_S = 83; // Backward
+const KEY_Q = 81; // Left (was A)
+const KEY_D = 68; // Right
+const KEY_SHIFT = 16; // Up (was Space)
+const KEY_CTRL = 17; // Down (was Shift)
 const KEY_F10 = 121;
 
 // Mouse wheel control IDs
@@ -45,11 +46,9 @@ function flyModeTick() {
 
     const player = alt.Player.local;
     
-    // Freeze player to prevent falling
-    native.freezeEntityPosition(player.scriptID, true);
-    
-    // Keep player invisible to prevent animation issues
-    native.setEntityAlpha(player.scriptID, 0, false);
+    // Disable weapon wheel controls when in fly mode
+    native.disableControlAction(0, CONTROL_WEAPON_WHEEL_NEXT, true);
+    native.disableControlAction(0, CONTROL_WEAPON_WHEEL_PREV, true);
     
     // Handle mouse wheel for speed control
     if (
@@ -63,6 +62,34 @@ function flyModeTick() {
         native.isControlJustPressed(0, CONTROL_SCROLL_DOWN_ALTERNATE)
     ) {
         decreaseFlySpeed();
+    }
+    
+    // Check if player is in a vehicle
+    const vehicle = player.vehicle;
+    const entityToMove = vehicle ? vehicle.scriptID : player.scriptID;
+    
+    if (!vehicle) {
+        // Freeze player to prevent falling (only if not in vehicle)
+        native.freezeEntityPosition(player.scriptID, true);
+        
+        // Set Superman flying animation for player
+        if (!native.isEntityPlayingAnim(player.scriptID, 'move_crouch_proto', 'idle_intro', 3)) {
+            native.requestAnimDict('move_crouch_proto');
+            let timeout = 0;
+            const animInterval = alt.setInterval(() => {
+                if (native.hasAnimDictLoaded('move_crouch_proto') || timeout > 100) {
+                    alt.clearInterval(animInterval);
+                    if (native.hasAnimDictLoaded('move_crouch_proto')) {
+                        // Play animation that looks like Superman pose
+                        native.taskPlayAnim(player.scriptID, 'move_crouch_proto', 'idle_intro', 8.0, -8.0, -1, 1, 0, false, false, false);
+                    }
+                }
+                timeout++;
+            }, 10);
+        }
+    } else {
+        // Freeze vehicle when flying
+        native.freezeEntityPosition(vehicle.scriptID, true);
     }
     
     // Get camera direction
@@ -86,15 +113,15 @@ function flyModeTick() {
     };
     
     // Get current position
-    let pos = player.pos;
+    let pos = vehicle ? vehicle.pos : player.pos;
     let newPos = { x: pos.x, y: pos.y, z: pos.z };
     
-    // Calculate speed based on current multiplier
-    const baseSpeed = 0.5;
+    // Calculate speed based on current multiplier (increased base speed)
+    const baseSpeed = 2.0; // Increased from 0.5
     const currentSpeed = baseSpeed * flySpeed;
     
-    // Forward/Backward movement (W/S)
-    if (alt.isKeyDown(KEY_W)) {
+    // Forward/Backward movement (Z/S for AZERTY)
+    if (alt.isKeyDown(KEY_Z)) {
         newPos.x += forward.x * currentSpeed;
         newPos.y += forward.y * currentSpeed;
         newPos.z += forward.z * currentSpeed;
@@ -105,8 +132,8 @@ function flyModeTick() {
         newPos.z -= forward.z * currentSpeed;
     }
     
-    // Left/Right movement (A/D)
-    if (alt.isKeyDown(KEY_A)) {
+    // Left/Right movement (Q/D for AZERTY)
+    if (alt.isKeyDown(KEY_Q)) {
         newPos.x -= right.x * currentSpeed;
         newPos.y -= right.y * currentSpeed;
     }
@@ -115,18 +142,18 @@ function flyModeTick() {
         newPos.y += right.y * currentSpeed;
     }
     
-    // Up movement (Space)
-    if (alt.isKeyDown(KEY_SPACE)) {
+    // Up movement (Shift)
+    if (alt.isKeyDown(KEY_SHIFT)) {
         newPos.z += currentSpeed;
     }
     
-    // Down movement (Shift)
-    if (alt.isKeyDown(KEY_SHIFT)) {
+    // Down movement (Ctrl)
+    if (alt.isKeyDown(KEY_CTRL)) {
         newPos.z -= currentSpeed;
     }
     
     // Apply new position
-    native.setEntityCoordsNoOffset(player.scriptID, newPos.x, newPos.y, newPos.z, false, false, false);
+    native.setEntityCoordsNoOffset(entityToMove, newPos.x, newPos.y, newPos.z, false, false, false);
 }
 
 /**
@@ -140,21 +167,31 @@ function enableFlyMode() {
     isFlyModeActive = true;
     const player = alt.Player.local;
     
-    // Disable collision
-    native.setEntityCollision(player.scriptID, false, false);
+    // Check if player is in a vehicle
+    const vehicle = player.vehicle;
     
-    // Make player invisible
-    native.setEntityAlpha(player.scriptID, 0, false);
+    if (vehicle) {
+        // Store vehicle reference
+        savedVehicle = vehicle.scriptID;
+        // Disable collision for vehicle
+        native.setEntityCollision(vehicle.scriptID, false, false);
+        // Freeze vehicle
+        native.freezeEntityPosition(vehicle.scriptID, true);
+    } else {
+        // Disable collision for player
+        native.setEntityCollision(player.scriptID, false, false);
+        // Freeze player
+        native.freezeEntityPosition(player.scriptID, true);
+    }
     
-    // Freeze player
-    native.freezeEntityPosition(player.scriptID, true);
+    // Player stays visible - no longer making invisible
     
     // Start fly mode tick
     if (flyInterval === null) {
         flyInterval = alt.everyTick(flyModeTick);
     }
     
-    console.log('[Fly Mode] Enabled - Speed:', flySpeed);
+    console.log('[Fly Mode] Enabled - Speed:', flySpeed, 'In Vehicle:', vehicle !== null);
 }
 
 /**
@@ -168,14 +205,27 @@ function disableFlyMode() {
     isFlyModeActive = false;
     const player = alt.Player.local;
     
-    // Re-enable collision
-    native.setEntityCollision(player.scriptID, true, true);
+    // Check if player was in a vehicle
+    const vehicle = player.vehicle;
     
-    // Make player visible again
-    native.resetEntityAlpha(player.scriptID);
+    if (vehicle) {
+        // Re-enable collision for vehicle
+        native.setEntityCollision(vehicle.scriptID, true, true);
+        // Unfreeze vehicle
+        native.freezeEntityPosition(vehicle.scriptID, false);
+        // Clear animation on player in vehicle
+        native.clearPedTasks(player.scriptID);
+    } else {
+        // Re-enable collision for player
+        native.setEntityCollision(player.scriptID, true, true);
+        // Unfreeze player
+        native.freezeEntityPosition(player.scriptID, false);
+        // Clear any animations
+        native.clearPedTasks(player.scriptID);
+    }
     
-    // Unfreeze player
-    native.freezeEntityPosition(player.scriptID, false);
+    // Reset saved vehicle
+    savedVehicle = null;
     
     // Stop fly mode tick
     if (flyInterval !== null) {
