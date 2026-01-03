@@ -230,7 +230,8 @@ alt.onClient(WeaponMenuEvents.toServer.getCurrentWeapons, (player: alt.Player) =
                     console.log('[WeaponMenu] Found weapon:', weaponDef.name, 'tint:', weapon.tintIndex, 'ammo:', ammo);
                     
                     allWeapons.push({
-                        hash: weaponDef.hash, // Use string hash from weaponDef, not numeric hash from player.weapons
+                        hash: weaponDef.hash, // String hash for display and image lookup
+                        numericHash: weapon.hash, // Numeric hash for server operations
                         name: weaponDef.name,
                         image: weaponDef.image, // Include image property
                         ammo: ammo,
@@ -287,6 +288,8 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeapon, async (player: alt.Player, 
                     
                     allWeapons.push({
                         hash: weaponDef.hash, // Use string hash from weaponDef
+                        
+                        numericHash: weapon.hash, // Numeric hash for server operations
                         name: weaponDef.name,
                         image: weaponDef.image, // Include image property
                         ammo: ammo,
@@ -343,6 +346,8 @@ alt.onClient(WeaponMenuEvents.toServer.setWeaponTint, async (player: alt.Player,
                     
                     allWeapons.push({
                         hash: weaponDef.hash, // Use string hash from weaponDef
+                        
+                        numericHash: weapon.hash, // Numeric hash for server operations
                         name: weaponDef.name,
                         image: weaponDef.image, // Include image property
                         ammo: ammo,
@@ -402,6 +407,8 @@ alt.onClient(WeaponMenuEvents.toServer.setWeaponAmmo, async (player: alt.Player,
                     
                     allWeapons.push({
                         hash: weaponDef.hash, // Use string hash from weaponDef
+                        
+                        numericHash: weapon.hash, // Numeric hash for server operations
                         name: weaponDef.name,
                         image: weaponDef.image, // Include image property
                         ammo: weaponAmmo,
@@ -463,7 +470,9 @@ alt.onClient(WeaponMenuEvents.toServer.addWeaponComponent, async (player: alt.Pl
                 
                 allWeapons.push({
                     hash: weaponDef.hash, // Use string hash from weaponDef
-                    name: weaponDef.name,
+                    
+                        numericHash: weapon.hash, // Numeric hash for server operations
+                        name: weaponDef.name,
                     image: weaponDef.image, // Include image property
                     ammo: ammo,
                     tintIndex: weapon.tintIndex,
@@ -523,7 +532,9 @@ alt.onClient(WeaponMenuEvents.toServer.removeWeaponComponent, async (player: alt
                 
                 allWeapons.push({
                     hash: weaponDef.hash, // Use string hash from weaponDef
-                    name: weaponDef.name,
+                    
+                        numericHash: weapon.hash, // Numeric hash for server operations
+                        name: weaponDef.name,
                     image: weaponDef.image, // Include image property
                     ammo: ammo,
                     tintIndex: weapon.tintIndex,

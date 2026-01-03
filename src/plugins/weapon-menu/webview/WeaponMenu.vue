@@ -149,7 +149,7 @@ function isFavorite(weapon: Weapon): boolean {
 
 // Get weapon image path with proper fallback handling
 function getWeaponImage(weapon: Weapon | any): string {
-    // Use explicit image property if available
+    // Use explicit image property if available (already includes .svg extension)
     if (weapon?.image) {
         return `/images/weapons/${weapon.image}`;
     }
@@ -157,7 +157,7 @@ function getWeaponImage(weapon: Weapon | any): string {
     // Generate image name from hash if available
     if (weapon?.hash && typeof weapon.hash === 'string') {
         const hashWithoutPrefix = weapon.hash.replace('weapon_', '').replace('gadget_', '');
-        return `/images/weapons/${hashWithoutPrefix}.png`;
+        return `/images/weapons/${weapon.hash}.svg`; // Use full hash with .svg extension
     }
     
     // Fallback to default placeholder
@@ -257,9 +257,10 @@ function getWeaponName(weaponOrHash: any): string {
     return `Weapon ${hash}`;
 }
 
-function removeWeapon(weaponHash: number) {
+function removeWeapon(weapon: any) {
     try {
-        events.emitServer(WeaponMenuEvents.toServer.removeWeapon, weaponHash);
+        const numericHash = weapon.numericHash || weapon.hash;
+        events.emitServer(WeaponMenuEvents.toServer.removeWeapon, numericHash);
         // Reset selected weapon after removal
         selectedModifyWeapon.value = null;
     } catch (err) {
@@ -267,9 +268,10 @@ function removeWeapon(weaponHash: number) {
     }
 }
 
-function changeTint(weaponHash: number, tintIndex: number) {
+function changeTint(weapon: any, tintIndex: number) {
     try {
-        events.emitServer(WeaponMenuEvents.toServer.setWeaponTint, weaponHash, tintIndex);
+        const numericHash = weapon.numericHash || weapon.hash;
+        events.emitServer(WeaponMenuEvents.toServer.setWeaponTint, numericHash, tintIndex);
         // Refresh weapons list to show updated tint
         setTimeout(() => loadCurrentWeapons(), 500);
     } catch (err) {
@@ -277,15 +279,16 @@ function changeTint(weaponHash: number, tintIndex: number) {
     }
 }
 
-function changeAmmo(weaponHash: number, ammo: number) {
+function changeAmmo(weapon: any, ammo: number) {
     try {
+        const numericHash = weapon.numericHash || weapon.hash;
         const ammoValue = Math.max(0, parseInt(String(ammo)) || 0);
-        events.emitServer(WeaponMenuEvents.toServer.setWeaponAmmo, weaponHash, ammoValue);
+        events.emitServer(WeaponMenuEvents.toServer.setWeaponAmmo, numericHash, ammoValue);
         // Update local state immediately for better UX
-        if (selectedModifyWeapon.value && selectedModifyWeapon.value.hash === weaponHash) {
+        if (selectedModifyWeapon.value && selectedModifyWeapon.value.hash === weapon.hash) {
             selectedModifyWeapon.value.ammo = ammoValue;
         }
-        const weaponIndex = currentWeapons.value.findIndex(w => w.hash === weaponHash);
+        const weaponIndex = currentWeapons.value.findIndex(w => w.hash === weapon.hash);
         if (weaponIndex !== -1) {
             currentWeapons.value[weaponIndex].ammo = ammoValue;
         }
@@ -294,18 +297,20 @@ function changeAmmo(weaponHash: number, ammo: number) {
     }
 }
 
-function addComponent(weaponHash: number, componentHash: number) {
+function addComponent(weapon: any, componentHash: number) {
     try {
-        events.emitServer(WeaponMenuEvents.toServer.addWeaponComponent, weaponHash, componentHash);
+        const numericHash = weapon.numericHash || weapon.hash;
+        events.emitServer(WeaponMenuEvents.toServer.addWeaponComponent, numericHash, componentHash);
         // Server will send updated weapons list via setCurrentWeapons event
     } catch (err) {
         console.error('Error adding component:', err);
     }
 }
 
-function removeComponent(weaponHash: number, componentHash: number) {
+function removeComponent(weapon: any, componentHash: number) {
     try {
-        events.emitServer(WeaponMenuEvents.toServer.removeWeaponComponent, weaponHash, componentHash);
+        const numericHash = weapon.numericHash || weapon.hash;
+        events.emitServer(WeaponMenuEvents.toServer.removeWeaponComponent, numericHash, componentHash);
         // Server will send updated weapons list via setCurrentWeapons event
     } catch (err) {
         console.error('Error removing component:', err);
@@ -570,7 +575,7 @@ onUnmounted(() => {
                         <label class="mb-2 block text-xs font-semibold text-gray-400">Weapon Tint</label>
                         <select
                             :value="selectedModifyWeapon.tintIndex"
-                            @change="changeTint(selectedModifyWeapon.hash, parseInt(($event.target as HTMLSelectElement).value))"
+                            @change="changeTint(selectedModifyWeapon, parseInt(($event.target as HTMLSelectElement).value))"
                             class="w-full rounded bg-gray-700 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option v-for="tint in WEAPON_TINTS" :key="tint.id" :value="tint.id">
@@ -585,7 +590,7 @@ onUnmounted(() => {
                         <input
                             type="number"
                             :value="selectedModifyWeapon.ammo"
-                            @change="changeAmmo(selectedModifyWeapon.hash, parseInt(($event.target as HTMLInputElement).value))"
+                            @change="changeAmmo(selectedModifyWeapon, parseInt(($event.target as HTMLInputElement).value))"
                             min="0"
                             max="9999"
                             class="w-full rounded bg-gray-700 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
@@ -607,7 +612,7 @@ onUnmounted(() => {
                                 >
                                     <span class="text-xs text-white">{{ comp.name }}</span>
                                     <button
-                                        @click="removeComponent(selectedModifyWeapon.hash, comp.hash)"
+                                        @click="removeComponent(selectedModifyWeapon, comp.hash)"
                                         class="rounded bg-red-600 px-2 py-0.5 text-xs text-white hover:bg-red-700"
                                     >
                                         Remove
@@ -628,7 +633,7 @@ onUnmounted(() => {
                                 >
                                     <span class="text-xs text-white">{{ comp.name }}</span>
                                     <button
-                                        @click="addComponent(selectedModifyWeapon.hash, comp.hash)"
+                                        @click="addComponent(selectedModifyWeapon, comp.hash)"
                                         class="rounded bg-green-600 px-2 py-0.5 text-xs text-white hover:bg-green-700"
                                     >
                                         Add
@@ -641,7 +646,7 @@ onUnmounted(() => {
 
                     <!-- Remove Weapon Button -->
                     <button
-                        @click="removeWeapon(selectedModifyWeapon.hash)"
+                        @click="removeWeapon(selectedModifyWeapon)"
                         class="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
                     >
                         Remove Weapon
