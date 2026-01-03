@@ -4,13 +4,13 @@ import { FlyModeEvents } from '../shared/events.js';
 
 // Fly mode state
 let isFlyModeActive = false;
-let flySpeed = 2.0; // Default speed multiplier (increased from 1.0)
+let flySpeed = 1.0; // Default speed multiplier - reduced for better control
 let flyInterval: number | null = null;
 
 // Speed settings
-const MIN_SPEED = 0.5;
-const MAX_SPEED = 50.0; // Increased from 10.0 for much faster speeds
-const SPEED_INCREMENT = 1.0; // Increased from 0.2 for faster speed changes
+const MIN_SPEED = 0.1; // Reduced from 0.5 for slower movement option
+const MAX_SPEED = 20.0; // Reduced from 50.0 for better control
+const SPEED_INCREMENT = 0.5; // Reduced from 1.0 for finer speed control
 
 // Control keys (AZERTY layout)
 const KEY_Z = 90; // Forward (was W)
@@ -48,20 +48,29 @@ function flyModeTick() {
 
     const player = alt.Player.local;
     
-    // Disable weapon wheel controls when in fly mode
-    native.disableControlAction(0, CONTROL_WEAPON_WHEEL_NEXT, true);
-    native.disableControlAction(0, CONTROL_WEAPON_WHEEL_PREV, true);
+    // Disable weapon wheel controls when in fly mode - multiple control IDs to ensure it's fully disabled
+    native.disableControlAction(0, 14, true); // Weapon wheel next
+    native.disableControlAction(0, 15, true); // Weapon wheel prev
+    native.disableControlAction(0, 16, true); // Select next weapon
+    native.disableControlAction(0, 17, true); // Select prev weapon
+    native.disableControlAction(0, 37, true); // Select weapon (tab)
+    native.disableControlAction(0, 157, true); // Weapon wheel up
+    native.disableControlAction(0, 158, true); // Weapon wheel down
+    native.disableControlAction(0, 159, true); // Weapon wheel left
+    native.disableControlAction(0, 160, true); // Weapon wheel right
+    native.disableControlAction(0, 261, true); // Weapon wheel
+    native.disableControlAction(0, 262, true); // Weapon wheel
     
     // Handle mouse wheel for speed control
     if (
-        native.isControlJustPressed(0, CONTROL_WEAPON_WHEEL_NEXT) ||
-        native.isControlJustPressed(0, CONTROL_SCROLL_UP_ALTERNATE)
+        native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_NEXT) ||
+        native.isDisabledControlJustPressed(0, CONTROL_SCROLL_UP_ALTERNATE)
     ) {
         increaseFlySpeed();
     }
     if (
-        native.isControlJustPressed(0, CONTROL_WEAPON_WHEEL_PREV) ||
-        native.isControlJustPressed(0, CONTROL_SCROLL_DOWN_ALTERNATE)
+        native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_PREV) ||
+        native.isDisabledControlJustPressed(0, CONTROL_SCROLL_DOWN_ALTERNATE)
     ) {
         decreaseFlySpeed();
     }
@@ -74,16 +83,16 @@ function flyModeTick() {
         // Freeze player to prevent falling (only if not in vehicle)
         native.freezeEntityPosition(player.scriptID, true);
         
-        // Set Superman flying animation for player
-        if (!native.isEntityPlayingAnim(player.scriptID, 'move_crouch_proto', 'idle_intro', 3)) {
-            native.requestAnimDict('move_crouch_proto');
+        // Set Superman flying animation for player - lying on stomach with fists forward
+        if (!native.isEntityPlayingAnim(player.scriptID, 'swimming@swim', 'swim_breast', 3)) {
+            native.requestAnimDict('swimming@swim');
             let timeout = 0;
             const animInterval = alt.setInterval(() => {
-                if (native.hasAnimDictLoaded('move_crouch_proto') || timeout > MAX_ANIM_LOAD_ATTEMPTS) {
+                if (native.hasAnimDictLoaded('swimming@swim') || timeout > MAX_ANIM_LOAD_ATTEMPTS) {
                     alt.clearInterval(animInterval);
-                    if (native.hasAnimDictLoaded('move_crouch_proto')) {
-                        // Play animation that looks like Superman pose
-                        native.taskPlayAnim(player.scriptID, 'move_crouch_proto', 'idle_intro', 8.0, -8.0, -1, 1, 0, false, false, false);
+                    if (native.hasAnimDictLoaded('swimming@swim')) {
+                        // Play swimming animation that looks like Superman flying pose
+                        native.taskPlayAnim(player.scriptID, 'swimming@swim', 'swim_breast', 8.0, -8.0, -1, 1, 0, false, false, false);
                     }
                 }
                 timeout++;
@@ -118,39 +127,42 @@ function flyModeTick() {
     let pos = vehicle ? vehicle.pos : player.pos;
     let newPos = { x: pos.x, y: pos.y, z: pos.z };
     
-    // Calculate speed based on current multiplier (increased base speed)
-    const baseSpeed = 2.0; // Increased from 0.5
+    // Calculate speed based on current multiplier (adjusted for better control)
+    const baseSpeed = 1.0; // Reduced from 2.0 for better control
     const currentSpeed = baseSpeed * flySpeed;
     
+    // Check if chat is open - if so, don't process movement keys
+    const isChatOpen = alt.isMenuOpen() || alt.isConsoleOpen();
+    
     // Forward/Backward movement (Z/S for AZERTY)
-    if (alt.isKeyDown(KEY_Z)) {
+    if (!isChatOpen && alt.isKeyDown(KEY_Z)) {
         newPos.x += forward.x * currentSpeed;
         newPos.y += forward.y * currentSpeed;
         newPos.z += forward.z * currentSpeed;
     }
-    if (alt.isKeyDown(KEY_S)) {
+    if (!isChatOpen && alt.isKeyDown(KEY_S)) {
         newPos.x -= forward.x * currentSpeed;
         newPos.y -= forward.y * currentSpeed;
         newPos.z -= forward.z * currentSpeed;
     }
     
     // Left/Right movement (Q/D for AZERTY)
-    if (alt.isKeyDown(KEY_Q)) {
+    if (!isChatOpen && alt.isKeyDown(KEY_Q)) {
         newPos.x -= right.x * currentSpeed;
         newPos.y -= right.y * currentSpeed;
     }
-    if (alt.isKeyDown(KEY_D)) {
+    if (!isChatOpen && alt.isKeyDown(KEY_D)) {
         newPos.x += right.x * currentSpeed;
         newPos.y += right.y * currentSpeed;
     }
     
-    // Up movement (Shift)
-    if (alt.isKeyDown(KEY_SHIFT)) {
+    // Up movement (Shift) - don't trigger when chat is open
+    if (!isChatOpen && alt.isKeyDown(KEY_SHIFT)) {
         newPos.z += currentSpeed;
     }
     
-    // Down movement (Ctrl)
-    if (alt.isKeyDown(KEY_CTRL)) {
+    // Down movement (Ctrl) - don't trigger when chat is open
+    if (!isChatOpen && alt.isKeyDown(KEY_CTRL)) {
         newPos.z -= currentSpeed;
     }
     
@@ -273,9 +285,10 @@ function decreaseFlySpeed() {
 /**
  * Handle key press for F10 toggle
  */
-alt.on('keyup', (key: number) => {
-    // F10 key - Toggle fly mode
-    if (key === KEY_F10) {
+alt.on('keydown', (key: number) => {
+    // F10 key - Toggle fly mode (keycode 121)
+    // Also check if chat/console is open to avoid conflicts
+    if (key === KEY_F10 && !alt.isMenuOpen() && !alt.isConsoleOpen()) {
         alt.emitServer(FlyModeEvents.toServer.toggleFly);
     }
 });

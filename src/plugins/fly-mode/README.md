@@ -29,14 +29,18 @@ A fly/noclip plugin for alt:V servers using ReBar framework. Allows admin users 
 
 ### Speed Control
 
-- Default speed: 2.0x
-- Minimum speed: 0.5x
-- Maximum speed: 50.0x
-- Speed increment: 1.0x per scroll
+- Default speed: 1.0x
+- Minimum speed: 0.1x
+- Maximum speed: 20.0x
+- Speed increment: 0.5x per scroll
 
 ### Vehicle Flying
 
 You can activate fly mode while in a vehicle. The vehicle will fly with you and remain with you when you disable fly mode.
+
+### Chat Protection
+
+Movement controls are automatically disabled when the chat or console is open, preventing accidental movement when typing commands like `/fly`.
 
 ## Installation
 
