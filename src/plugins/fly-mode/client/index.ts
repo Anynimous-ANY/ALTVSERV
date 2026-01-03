@@ -7,12 +7,14 @@ let isFlyModeActive = false;
 let flySpeed = 0.5; // Default speed multiplier - medium speed
 let flyInterval: number | null = null;
 let lastF10Press = 0; // Debounce for F10 key
+let lastSpeedChange = 0; // Debounce for speed changes
 
 // Speed settings - expanded range for more control
 const MIN_SPEED = 0.05; // Very slow minimum
 const MAX_SPEED = 5.0; // Fast maximum
 const SPEED_INCREMENT = 0.1; // Fine increment for precise control
 const F10_DEBOUNCE_MS = 500; // Debounce time for F10 to prevent double triggers
+const SPEED_CHANGE_DEBOUNCE_MS = 150; // Debounce time for speed changes
 
 // Control keys (AZERTY layout)
 const KEY_Z = 90; // Forward (was W)
@@ -24,8 +26,8 @@ const KEY_CTRL = 17; // Down (was Shift)
 const KEY_F10 = 121;
 
 // Mouse wheel control IDs
-const CONTROL_WEAPON_WHEEL_NEXT = 14; // Scroll up
-const CONTROL_WEAPON_WHEEL_PREV = 15; // Scroll down
+const CONTROL_WEAPON_WHEEL_NEXT = 14; // Scroll down (next weapon in list)
+const CONTROL_WEAPON_WHEEL_PREV = 15; // Scroll up (previous weapon in list)
 const CONTROL_SELECT_NEXT_WEAPON = 16; // Select next weapon
 const CONTROL_SELECT_PREV_WEAPON = 17; // Select prev weapon
 const CONTROL_SELECT_WEAPON = 37; // Select weapon (tab)
@@ -59,6 +61,9 @@ function flyModeTick() {
 
     const player = alt.Player.local;
     
+    // Get camera direction once per frame
+    const camRot = native.getGameplayCamRot(2);
+    
     // Disable weapon wheel controls when in fly mode - all control IDs to ensure it's fully disabled
     native.disableControlAction(0, CONTROL_WEAPON_WHEEL_NEXT, true);
     native.disableControlAction(0, CONTROL_WEAPON_WHEEL_PREV, true);
@@ -73,17 +78,23 @@ function flyModeTick() {
     native.disableControlAction(0, CONTROL_WEAPON_WHEEL_262, true);
     
     // Handle mouse wheel for speed control
-    if (
-        native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_NEXT) ||
-        native.isDisabledControlJustPressed(0, CONTROL_SCROLL_UP_ALTERNATE)
-    ) {
-        increaseFlySpeed();
-    }
-    if (
-        native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_PREV) ||
-        native.isDisabledControlJustPressed(0, CONTROL_SCROLL_DOWN_ALTERNATE)
-    ) {
-        decreaseFlySpeed();
+    const now = Date.now();
+    if (now - lastSpeedChange > SPEED_CHANGE_DEBOUNCE_MS) {
+        // Note: In GTA V, WEAPON_WHEEL_PREV (15) is scroll UP, WEAPON_WHEEL_NEXT (14) is scroll DOWN
+        const scrollUp = native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_PREV) || 
+                        native.isDisabledControlJustPressed(0, CONTROL_SCROLL_UP_ALTERNATE);
+        const scrollDown = native.isDisabledControlJustPressed(0, CONTROL_WEAPON_WHEEL_NEXT) || 
+                          native.isDisabledControlJustPressed(0, CONTROL_SCROLL_DOWN_ALTERNATE);
+        
+        if (scrollUp) {
+            console.log('[Fly Mode] Mouse wheel UP detected (control 15 or 241) - Increasing speed');
+            lastSpeedChange = now;
+            increaseFlySpeed();
+        } else if (scrollDown) {
+            console.log('[Fly Mode] Mouse wheel DOWN detected (control 14 or 242) - Decreasing speed');
+            lastSpeedChange = now;
+            decreaseFlySpeed();
+        }
     }
     
     // Check if player is in a vehicle
@@ -94,27 +105,27 @@ function flyModeTick() {
         // Freeze player to prevent falling (only if not in vehicle)
         native.freezeEntityPosition(player.scriptID, true);
         
-        // Set Superman flying animation - use fallskydive animation for better Superman pose
-        const animDict = 'move_strafe@stealth';
-        const animName = 'idle';
+        // Set meditation animation - force play every frame
+        const animDict = 'rcmcollect_paperleadinout@';
+        const animName = 'meditiate_idle';
         
-        // Force the animation every frame to ensure it stays active
-        if (!native.isEntityPlayingAnim(player.scriptID, animDict, animName, 3)) {
-            if (!native.hasAnimDictLoaded(animDict)) {
-                native.requestAnimDict(animDict);
-            } else {
-                // Play animation with flags that keep it active
-                // Flag 1 = repeat, no interruption
-                native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, -8.0, -1, 1, 0, false, false, false);
-            }
+        // Request animation dictionary if not loaded
+        if (!native.hasAnimDictLoaded(animDict)) {
+            native.requestAnimDict(animDict);
+        } else {
+            // Force the animation to play every frame
+            // Flag 1 (repeat/loop) = continuous playback
+            native.taskPlayAnim(player.scriptID, animDict, animName, 8.0, 1.0, -1, 1, 0.0, false, false, false);
         }
+        
+        // Set player heading to match camera rotation
+        native.setEntityHeading(player.scriptID, camRot.z);
     } else {
         // Freeze vehicle when flying
         native.freezeEntityPosition(vehicle.scriptID, true);
     }
     
-    // Get camera direction
-    const camRot = native.getGameplayCamRot(2);
+    // Calculate forward direction from camera
     
     // Calculate forward direction from camera
     const rotZ = (camRot.z * Math.PI) / 180;
@@ -217,7 +228,7 @@ function enableFlyMode() {
         flyInterval = alt.everyTick(flyModeTick);
     }
     
-    console.log('[Fly Mode] Enabled - Speed:', flySpeed, 'In Vehicle:', vehicle !== null);
+    console.log('[Fly Mode] Enabled - Speed:', flySpeed, 'In Vehicle:', vehicle !== null, 'Animation: meditation');
 }
 
 /**
@@ -274,10 +285,11 @@ function handleSetFlyMode(enabled: boolean) {
  * Increase fly speed
  */
 function increaseFlySpeed() {
+    const oldSpeed = flySpeed;
     flySpeed = Math.min(flySpeed + SPEED_INCREMENT, MAX_SPEED);
     flySpeed = roundSpeed(flySpeed);
     
-    console.log('[Fly Mode] Speed increased to:', flySpeed);
+    console.log(`[Fly Mode] Speed increased from ${oldSpeed.toFixed(1)}x to ${flySpeed.toFixed(1)}x`);
     
     // Notify server about speed change
     alt.emitServer(FlyModeEvents.toServer.updateSpeed, flySpeed);
@@ -287,10 +299,11 @@ function increaseFlySpeed() {
  * Decrease fly speed
  */
 function decreaseFlySpeed() {
+    const oldSpeed = flySpeed;
     flySpeed = Math.max(flySpeed - SPEED_INCREMENT, MIN_SPEED);
     flySpeed = roundSpeed(flySpeed);
     
-    console.log('[Fly Mode] Speed decreased to:', flySpeed);
+    console.log(`[Fly Mode] Speed decreased from ${oldSpeed.toFixed(1)}x to ${flySpeed.toFixed(1)}x`);
     
     // Notify server about speed change
     alt.emitServer(FlyModeEvents.toServer.updateSpeed, flySpeed);
@@ -303,6 +316,11 @@ function decreaseFlySpeed() {
 alt.on('keydown', (key: number) => {
     // F10 key - Toggle fly mode (keycode 121)
     if (key === KEY_F10) {
+        // Don't process F10 when chat/console is open
+        if (alt.isMenuOpen() || alt.isConsoleOpen()) {
+            return;
+        }
+        
         const now = Date.now();
         if (now - lastF10Press > F10_DEBOUNCE_MS) {
             lastF10Press = now;
